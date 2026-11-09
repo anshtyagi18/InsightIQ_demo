@@ -169,6 +169,20 @@ export const dataIntelligenceService = {
     return response.data;
   },
 
+  async chatWithCopilot(sessionId: string, query: string): Promise<CopilotResponse> {
+    return this.chatCopilot(sessionId, query);
+  },
+
+  /**
+   * Fetch current profile and statistics for active session
+   */
+  async getProfile(sessionId: string): Promise<DatasetProfile> {
+    const response = await axios.get<DatasetProfile>(`${API_BASE}/profile/${sessionId}`, {
+      timeout: 30000,
+    });
+    return response.data;
+  },
+
   /**
    * Retrieve formatted distribution chart payloads
    */

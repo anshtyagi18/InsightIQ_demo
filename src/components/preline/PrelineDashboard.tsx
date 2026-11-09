@@ -34,6 +34,49 @@ import { InsightiaWorkspace } from '@/components/insightia/InsightiaWorkspace';
 import { DatasetProfile, dataIntelligenceService } from '@/services/data-intelligence.service';
 import { toast } from 'sonner';
 
+const DEFAULT_FALLBACK_PROFILE: DatasetProfile = {
+  session_id: "default-sales-session",
+  dataset_name: "ecommerce_sales.csv",
+  total_rows: 1012,
+  total_cols: 10,
+  total_cells: 10120,
+  missing_cells: 14,
+  missing_rate: 0.0014,
+  duplicate_rows: 12,
+  duplicate_rate: 0.012,
+  outlier_count: 8,
+  health_score: 92,
+  columns: [
+    { name: "Order_ID", type: "integer", null_count: 0, unique_count: 1000, sample_values: [1001, 1002, 1003] },
+    { name: "Date", type: "datetime", null_count: 0, unique_count: 365, sample_values: ["2026-01-15", "2026-01-16"] },
+    { name: "Category", type: "categorical", null_count: 2, unique_count: 5, sample_values: ["Electronics", "Clothing", "Home"] },
+    { name: "Product", type: "categorical", null_count: 0, unique_count: 24, sample_values: ["Pro Laptop", "Smart Watch"] },
+    { name: "Region", type: "categorical", null_count: 0, unique_count: 4, sample_values: ["North America", "Europe", "Asia-Pacific"] },
+    { name: "Price", type: "numeric", null_count: 4, unique_count: 450, min: 12, max: 1200, mean: 265.96, median: 199.0 },
+    { name: "Quantity", type: "numeric", null_count: 0, unique_count: 10, min: 1, max: 15, mean: 3.2, median: 2.0 },
+    { name: "Revenue", type: "numeric", null_count: 8, unique_count: 680, min: 15, max: 8500, mean: 671.0, median: 450.0 },
+  ],
+  correlations: {},
+  strong_correlations: [
+    { col1: "Price", col2: "Revenue", correlation: 0.88, strength: "strong" },
+    { col1: "Quantity", col2: "Revenue", correlation: 0.76, strength: "strong" }
+  ],
+  insights: [
+    { type: "health", level: "success", title: "High Data Integrity", description: "99.8% of records contain valid schema values." },
+    { type: "distribution", level: "info", title: "Electronics Leading Revenue", description: "Electronics accounts for 44% of total sales volume." }
+  ],
+  preview: [
+    { Order_ID: 1001, Date: "2026-01-15", Category: "Electronics", Product: "Pro Laptop", Region: "North America", Price: 1199.99, Quantity: 2, Revenue: 2399.98 },
+    { Order_ID: 1002, Date: "2026-01-16", Category: "Clothing", Product: "Active Wear", Region: "Europe", Price: 49.50, Quantity: 4, Revenue: 198.00 },
+    { Order_ID: 1003, Date: "2026-01-17", Category: "Home", Product: "Coffee Machine", Region: "Asia-Pacific", Price: 189.00, Quantity: 1, Revenue: 189.00 },
+    { Order_ID: 1004, Date: "2026-01-18", Category: "Electronics", Product: "Noise-Cancelling Headphones", Region: "North America", Price: 299.00, Quantity: 3, Revenue: 897.00 },
+    { Order_ID: 1005, Date: "2026-01-19", Category: "Clothing", Product: "Winter Jacket", Region: "Europe", Price: 145.00, Quantity: 2, Revenue: 290.00 },
+    { Order_ID: 1006, Date: "2026-01-20", Category: "Electronics", Product: "Smart Watch", Region: "Latin America", Price: 220.00, Quantity: 1, Revenue: 220.00 },
+    { Order_ID: 1007, Date: "2026-01-21", Category: "Home", Product: "Air Purifier", Region: "Asia-Pacific", Price: 310.00, Quantity: 2, Revenue: 620.00 },
+    { Order_ID: 1008, Date: "2026-01-22", Category: "Clothing", Product: "Running Shoes", Region: "North America", Price: 120.00, Quantity: 1, Revenue: 120.00 },
+  ]
+};
+
 export const PrelineDashboard: React.FC = () => {
   // Navigation & UI States
   const [activeView, setActiveView] = useState('overview');
@@ -44,19 +87,21 @@ export const PrelineDashboard: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
 
-  // Backend Dataset & Profile States
-  const [profile, setProfile] = useState<DatasetProfile | null>(null);
+  // Backend Dataset & Profile States (Initialized with default sample so dashboard is never blank)
+  const [profile, setProfile] = useState<DatasetProfile>(DEFAULT_FALLBACK_PROFILE);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto-load default dataset on startup for zero blank states
+  // Auto-load live backend sample dataset on startup
   useEffect(() => {
     const initData = async () => {
       try {
         setIsLoading(true);
         const data = await dataIntelligenceService.loadSampleDataset('ecommerce_sales');
-        setProfile(data);
+        if (data && data.total_rows) {
+          setProfile(data);
+        }
       } catch (e) {
-        console.warn('Initial sample load note:', e);
+        console.warn('Initial backend sample load notice (using embedded fallback):', e);
       } finally {
         setIsLoading(false);
       }
@@ -105,9 +150,41 @@ export const PrelineDashboard: React.FC = () => {
     try {
       const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'auto_clean');
       setProfile(updated);
-      toast.success(updated.audit_entry || 'Dataset cleaned successfully!', { id: toastId });
+      toast.success(updated.audit_entry || `Dataset cleaned! Missing: ${updated.missing_cells}, Duplicates: ${updated.duplicate_rows}`, { id: toastId });
     } catch (err: any) {
       toast.error(`Clean error: ${err.message}`, { id: toastId });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile]);
+
+  // One-Click Fix Missing
+  const handleFixMissing = useCallback(async () => {
+    if (!profile) return;
+    setIsLoading(true);
+    const toastId = toast.loading('Imputing missing values with statistical median...');
+    try {
+      const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'impute');
+      setProfile(updated);
+      toast.success(updated.audit_entry || `Cleaned missing values! Missing count is now ${updated.missing_cells}.`, { id: toastId });
+    } catch (err: any) {
+      toast.error(`Fix missing failed: ${err.message}`, { id: toastId });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile]);
+
+  // One-Click Deduplicate
+  const handleRemoveDuplicates = useCallback(async () => {
+    if (!profile) return;
+    setIsLoading(true);
+    const toastId = toast.loading('Stripping duplicate records...');
+    try {
+      const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'remove_duplicates');
+      setProfile(updated);
+      toast.success(updated.audit_entry || `Duplicates removed! Total records: ${updated.total_rows.toLocaleString()}`, { id: toastId });
+    } catch (err: any) {
+      toast.error(`Deduplication failed: ${err.message}`, { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -205,40 +282,36 @@ export const PrelineDashboard: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Date Filter Dropdown (Matches Preline "Today v") */}
-                  <button className="inline-flex items-center gap-2 bg-[#141418] hover:bg-[#1b1b22] border border-[#27272a] text-xs font-medium text-zinc-200 px-3 py-1.5 rounded-lg shadow-2xs transition-colors">
-                    <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Today</span>
-                    <span className="text-zinc-500">▾</span>
-                  </button>
+                  {/* Date Filter Dropdown (Demo - Greyd out) */}
+                  <div 
+                    className="inline-flex items-center gap-1.5 bg-[#141418] border border-[#27272a] text-xs font-medium text-zinc-500 px-3 py-1.5 rounded-lg opacity-40 cursor-not-allowed pointer-events-none select-none"
+                    title="Time Range Filter - Coming Soon"
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                    <span>All Time</span>
+                    <span className="text-[9px] font-mono bg-zinc-800 text-zinc-400 px-1 py-0.2 rounded">Soon</span>
+                  </div>
 
-                  {/* Primary Action Button (Matches "+ Add activity") */}
+                  {/* Primary Action Button: Upload Dataset */}
                   <button
                     onClick={() => setShowUploadModal(true)}
-                    className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-xs transition-colors"
+                    className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
+                    title="Upload CSV, Excel, or JSON"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add activity</span>
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Upload Dataset</span>
                   </button>
                 </div>
               </div>
 
-              {/* 3. 4-SEGMENT HORIZONTAL KPI STRIP */}
+              {/* 3. 4-SEGMENT REACTIVE KPI STRIP */}
               <PrelineKPIStrip
+                profile={profile}
                 activeSegment={activeSegment}
                 onSelectSegment={setActiveSegment}
-                users={profile ? profile.total_rows.toLocaleString() : "54,382"}
-                usersTrend="1.2%"
-                isUsersPositive={true}
-                newUsers={profile ? Math.round(profile.total_rows * 0.06).toLocaleString() : "3,301"}
-                newUsersTrend="5.2%"
-                isNewUsersPositive={false}
-                returningUsers={profile ? (profile.total_rows - Math.round(profile.total_rows * 0.06)).toLocaleString() : "50,402"}
-                returningUsersTrend="14.7%"
-                isReturningPositive={false}
-                avgEngagement="2m 25s"
-                avgEngagementTrend="3%"
-                isEngagementPositive={true}
+                onFixMissing={handleFixMissing}
+                onRemoveDuplicates={handleRemoveDuplicates}
+                isCleaning={isLoading}
               />
 
               {/* 4. WORLD MAP & COUNTRY TABLE SECTION - Smooth Z-Black with crisp separator */}
@@ -266,8 +339,7 @@ export const PrelineDashboard: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                   <PrelineAnalyticsChart
-                    title="Visitors & Sessions Growth"
-                    totalValue={profile ? `${(profile.total_rows * 52).toLocaleString()}` : "54,382"}
+                    profile={profile}
                     trendPercentage="+12.5%"
                   />
                 </div>
@@ -282,22 +354,43 @@ export const PrelineDashboard: React.FC = () => {
                       Intelligent Data Engine
                     </h3>
                     <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                      Run automated missingness imputation, remove statistical outliers, or export executive PDF and Excel reports.
+                      Run automated missingness imputation, strip duplicate records, or export executive PDF and Excel reports.
                     </p>
 
                     <div className="space-y-2">
                       <button
-                        onClick={handleAutoClean}
+                        onClick={handleFixMissing}
                         disabled={isLoading || !profile}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                        title="Impute or drop missing cells across dataset"
                       >
                         <Wand2 className="w-3.5 h-3.5" />
-                        <span>Run One-Click Auto-Clean</span>
+                        <span>Fix Missing Values (Impute)</span>
+                      </button>
+
+                      <button
+                        onClick={handleRemoveDuplicates}
+                        disabled={isLoading || !profile}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#181822] hover:bg-[#222230] text-zinc-200 border border-[#27272a] rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                        title="Deduplicate dataset rows"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${isLoading ? 'animate-spin' : ''}`} />
+                        <span>Remove Duplicates</span>
+                      </button>
+
+                      <button
+                        onClick={handleAutoClean}
+                        disabled={isLoading || !profile}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#141418] hover:bg-[#1c1c24] text-zinc-300 border border-[#27272a] rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                        title="Run end-to-end cleaning and type inference"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Run Full Auto-Clean</span>
                       </button>
 
                       <button
                         onClick={() => setIsCopilotOpen(true)}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#181822] hover:bg-[#20202e] text-indigo-400 border border-indigo-500/30 rounded-lg text-xs font-semibold transition-colors"
+                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#181822] hover:bg-[#20202e] text-indigo-400 border border-indigo-500/30 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Open AI Data Copilot</span>
@@ -425,8 +518,13 @@ export const PrelineDashboard: React.FC = () => {
         sessionId={profile ? profile.session_id : null}
         onDatasetMutated={async () => {
           if (profile) {
-            const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'coerce_types');
-            setProfile(updated);
+            try {
+              const updated = await dataIntelligenceService.getProfile(profile.session_id);
+              setProfile(updated);
+            } catch {
+              const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'coerce_types');
+              setProfile(updated);
+            }
           }
         }}
       />

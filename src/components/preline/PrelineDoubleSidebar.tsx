@@ -218,19 +218,16 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
               <span>Visitors</span>
             </button>
 
-            <button
-              onClick={() => onSelectView('survey')}
-              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${
-                activeView === 'survey'
-                  ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20'
-                  : 'text-zinc-300 hover:bg-[#141418] hover:text-zinc-100'
-              }`}
+            {/* Survey - Disabled / Demo */}
+            <div
+              className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between opacity-40 cursor-not-allowed pointer-events-none select-none text-zinc-500"
+              title="Survey Feedback Module - Coming Soon"
             >
               <span>Survey</span>
-              <span className="text-xs font-medium bg-[#1a1a20] text-zinc-300 border border-[#27272a] px-1.5 py-0.2 rounded">
-                Beta
+              <span className="text-[10px] font-mono font-semibold bg-[#1a1a20] text-zinc-500 border border-[#27272a] px-1.5 py-0.2 rounded">
+                Soon
               </span>
-            </button>
+            </div>
 
             <button
               onClick={() => onSelectView('incidents')}
@@ -255,7 +252,7 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
             </button>
           </nav>
 
-          {/* Section: Channels */}
+          {/* Section: Channels (Disabled / Demo) */}
           <div className="mt-6">
             <button
               onClick={() => setChannelsOpen(!channelsOpen)}
@@ -265,39 +262,49 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
                 <ChevronDown className={`w-3 h-3 transition-transform ${channelsOpen ? '' : '-rotate-90'}`} />
                 Channels
               </span>
+              <span className="text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-1 py-0.2 rounded">Demo</span>
             </button>
 
             {channelsOpen && (
               <div className="space-y-1">
-                <button
-                  onClick={() => onSelectView('overview')}
-                  className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#141418] hover:text-zinc-100 rounded-lg transition-colors"
+                <div
+                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-zinc-500 opacity-40 cursor-not-allowed pointer-events-none select-none rounded-lg"
+                  title="PRO Channel - Coming Soon"
                 >
-                  <div className="w-5 h-5 rounded bg-[#18181d] border border-[#27272a] text-blue-400 flex items-center justify-center">
-                    <Box className="w-3 h-3" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded bg-[#18181d] border border-[#27272a] text-zinc-500 flex items-center justify-center">
+                      <Box className="w-3 h-3" />
+                    </div>
+                    <span>PRO</span>
                   </div>
-                  <span>PRO</span>
-                </button>
+                  <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.2 rounded">Soon</span>
+                </div>
 
-                <button
-                  onClick={() => onSelectView('overview')}
-                  className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#141418] hover:text-zinc-100 rounded-lg transition-colors"
+                <div
+                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-zinc-500 opacity-40 cursor-not-allowed pointer-events-none select-none rounded-lg"
+                  title="Blocks Channel - Coming Soon"
                 >
-                  <div className="w-5 h-5 rounded bg-[#18181d] border border-[#27272a] text-blue-400 flex items-center justify-center">
-                    <Grid className="w-3 h-3" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded bg-[#18181d] border border-[#27272a] text-zinc-500 flex items-center justify-center">
+                      <Grid className="w-3 h-3" />
+                    </div>
+                    <span>Blocks</span>
                   </div>
-                  <span>Blocks</span>
-                </button>
+                  <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.2 rounded">Soon</span>
+                </div>
 
-                <button
-                  onClick={() => onSelectView('overview')}
-                  className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#141418] hover:text-zinc-100 rounded-lg transition-colors"
+                <div
+                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-zinc-500 opacity-40 cursor-not-allowed pointer-events-none select-none rounded-lg"
+                  title="Templates Channel - Coming Soon"
                 >
-                  <div className="w-5 h-5 rounded bg-[#18181d] border border-[#27272a] text-blue-400 flex items-center justify-center">
-                    <Layout className="w-3 h-3" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded bg-[#18181d] border border-[#27272a] text-zinc-500 flex items-center justify-center">
+                      <Layout className="w-3 h-3" />
+                    </div>
+                    <span>Templates</span>
                   </div>
-                  <span>Templates</span>
-                </button>
+                  <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.2 rounded">Soon</span>
+                </div>
               </div>
             )}
           </div>
@@ -311,8 +318,8 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
                 <p className="text-xs font-bold text-zinc-100">
                   {creditsUsed}/{totalCredits} credits used
                 </p>
-                <p className="text-[11px] text-zinc-400">
-                  Invite team members
+                <p className="text-[11px] text-zinc-500 opacity-40 cursor-not-allowed pointer-events-none select-none">
+                  Invite team members <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.2 rounded">Soon</span>
                 </p>
               </div>
 
@@ -343,13 +350,14 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={onAutoClean}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors pt-1"
+            <div
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 opacity-40 cursor-not-allowed pointer-events-none select-none pt-1"
+              title="Premium Plan Upgrade - Coming Soon"
             >
-              <Zap className="w-3.5 h-3.5 fill-blue-400" />
-              <span>Upgrade now</span>
-            </button>
+              <Zap className="w-3.5 h-3.5 fill-zinc-500" />
+              <span>Upgrade plan</span>
+              <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.2 rounded text-zinc-400">Pro</span>
+            </div>
           </div>
 
           {/* Small thumbnail preview banner underneath */}

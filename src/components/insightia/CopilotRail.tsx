@@ -117,9 +117,15 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
       const assistantMsg: Message = {
         id: String(Date.now() + 1),
         sender: 'assistant',
-        text: resp.explanation,
+        text: resp.reply || resp.explanation,
         verified_figures: resp.verified_figures,
-        chart_payload: resp.chart_payload,
+        chart_payload: resp.chart_payload || (resp.chart_config ? {
+          chartType: resp.chart_config.type,
+          xAxis: resp.chart_config.x_axis,
+          yAxis: resp.chart_config.y_axis,
+          data: resp.chart_config.data,
+          title: resp.chart_config.title
+        } : null),
         executed_code: resp.executed_code,
         is_hinglish: resp.is_hinglish,
         timestamp: new Date().toLocaleTimeString()

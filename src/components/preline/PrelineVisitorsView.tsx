@@ -24,12 +24,21 @@ interface PrelineVisitorsViewProps {
 export const PrelineVisitorsView: React.FC<PrelineVisitorsViewProps> = ({
   totalRows = 54382,
 }) => {
-  const [timeRange, setTimeRange] = useState('Today');
+  const timeRanges = ['Today', 'Last 7 Days', 'Last 30 Days', 'All Time'];
+  const [timeRangeIndex, setTimeRangeIndex] = useState(0);
+  const timeRange = timeRanges[timeRangeIndex];
+
+  const handleNextTimeRange = () => {
+    setTimeRangeIndex((prev) => (prev + 1) % timeRanges.length);
+  };
+
+  const multiplier = timeRange === 'Today' ? 1 : timeRange === 'Last 7 Days' ? 6.8 : timeRange === 'Last 30 Days' ? 28.5 : 54;
+  const currentTotal = Math.round(totalRows * multiplier);
 
   const devices = [
-    { label: 'Desktop', percentage: 64, count: Math.round(totalRows * 0.64), icon: Monitor, color: 'bg-blue-500' },
-    { label: 'Mobile', percentage: 31, count: Math.round(totalRows * 0.31), icon: Smartphone, color: 'bg-emerald-500' },
-    { label: 'Tablet', percentage: 5, count: Math.round(totalRows * 0.05), icon: Tablet, color: 'bg-purple-500' },
+    { label: 'Desktop', percentage: 64, count: Math.round(currentTotal * 0.64), icon: Monitor, color: 'bg-blue-500' },
+    { label: 'Mobile', percentage: 31, count: Math.round(currentTotal * 0.31), icon: Smartphone, color: 'bg-emerald-500' },
+    { label: 'Tablet', percentage: 5, count: Math.round(currentTotal * 0.05), icon: Tablet, color: 'bg-purple-500' },
   ];
 
   const browsers = [
@@ -62,8 +71,12 @@ export const PrelineVisitorsView: React.FC<PrelineVisitorsViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-1.5 bg-[#141418] hover:bg-[#1b1b22] border border-[#27272a] text-xs font-medium text-zinc-200 px-3 py-1.5 rounded-lg shadow-2xs transition-colors">
-            <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+          <button 
+            onClick={handleNextTimeRange}
+            className="inline-flex items-center gap-1.5 bg-[#141418] hover:bg-[#1b1b22] border border-[#27272a] text-xs font-medium text-zinc-200 px-3 py-1.5 rounded-lg shadow-2xs transition-colors cursor-pointer"
+            title="Click to toggle time window"
+          >
+            <Calendar className="w-3.5 h-3.5 text-blue-400" />
             <span>{timeRange}</span>
             <span className="text-zinc-500">▾</span>
           </button>
