@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Export</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="{{ bootstrap_cdn }}" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="{{ chart_js_cdn }}"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        
+        .dashboard-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-title {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-description {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .export-metadata {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .kpi-section {
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .kpi-label {
+            font-size: 1rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .kpi-change {
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .kpi-positive { color: #28a745; }
+        .kpi-negative { color: #dc3545; }
+        .kpi-neutral { color: #6c757d; }
+        
+        .chart-section {
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+            padding-left: 15px;
+        }
+        
+        .footer {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .footer-text {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        /* Theme variations */
+        .theme-dark {
+            background: #343a40;
+            color: white;
+        }
+        
+        .theme-dark .dashboard-header,
+        .theme-dark .kpi-card,
+        .theme-dark .chart-card,
+        .theme-dark .footer {
+            background: #495057;
+            color: white;
+        }
+        
+        .theme-dark .dashboard-title,
+        .theme-dark .kpi-value,
+        .theme-dark .chart-title,
+        .theme-dark .section-title {
+            color: white;
+        }
+    </style>
+</head>
+<body class="theme-{{ theme }}">
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">{{ title }}</h1>
+            {% if description %}
+            <p class="dashboard-description">{{ description }}</p>
+            {% endif %}
+            
+            <div class="export-metadata">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Export ID:</strong> {{ export_id }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Generated:</strong> {{ export_timestamp }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Analytics Hub</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- KPIs Section -->
+        {% if kpis and kpis|length > 0 %}
+        <div class="kpi-section">
+            <h2 class="section-title">Key Performance Indicators</h2>
+            <div class="row">
+                {% for kpi in kpis %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="kpi-card">
+                        <div class="kpi-value">{{ kpi.value }}</div>
+                        <div class="kpi-label">{{ kpi.label }}</div>
+                        {% if kpi.change %}
+                        <div class="kpi-change kpi-{{ kpi.change_type|default('neutral') }}">
+                            {{ kpi.change }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Charts Section -->
+        {% if charts and charts|length > 0 %}
+        <div class="chart-section">
+            <h2 class="section-title">Analytics Charts</h2>
+            {% for chart in charts %}
+            <div class="chart-card mb-4">
+                <h3 class="chart-title">{{ chart.title|default('Chart ' + loop.index|string) }}</h3>
+                <div class="chart-container">
+                    <canvas id="chart-{{ loop.index }}" width="400" height="200"></canvas>
+                </div>
+                {% if chart.description %}
+                <p class="chart-description">{{ chart.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-text">
+                This report was generated by Analytics Hub on {{ export_timestamp }}.
+                <br>
+                Export ID: {{ export_id }}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Chart.js Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Chart configurations
+            {% if charts and charts|length > 0 %}
+            const charts = {{ charts|tojson }};
+            
+            {% for chart in charts %}
+            (function() {
+                const chartIndex = {{ loop.index }};
+                const ctx = document.getElementById('chart-' + chartIndex);
+                if (!ctx) return;
+                
+                const chartData = {{ chart|tojson }};
+                
+                // Default chart configuration
+                const config = {
+                    type: chartData.type || 'line',
+                    data: {
+                        labels: chartData.labels || [],
+                        datasets: chartData.datasets || []
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: chartData.title || 'Chart ' + chartIndex
+                            },
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        animation: {
+                            duration: 0 // Disable animations for export
+                        }
+                    }
+                };
+                
+                // Merge custom options if provided
+                if (chartData.options) {
+                    Object.assign(config.options, chartData.options);
+                }
+                
+                new Chart(ctx, config);
+            })();
+            {% endfor %}
+            
+            // Wait for charts to render before signaling completion
+            setTimeout(() => {
+                document.body.setAttribute('data-charts-ready', 'true');
+            }, 1000);
+            {% endif %}
+        });
+    </script>
+</body>
+</html> 

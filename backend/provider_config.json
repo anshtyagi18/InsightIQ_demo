@@ -1,0 +1,77 @@
+{
+  "providers": {
+    "google": {
+      "id": "google",
+      "name": "Google Gemini",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "api_key_env": "GEMINI_API_KEY",
+      "litellm_prefix": "gemini/",
+      "description": "Google's state-of-the-art Gemini models",
+      "enabled": true,
+      "supports_streaming": true,
+      "rate_limit": {
+        "requests_per_minute": 60
+      },
+      "api_key_configured": true
+    }
+  },
+  "models": {
+    "gemini-2.5-flash": {
+      "id": "gemini-2.5-flash",
+      "name": "Gemini 2.5 Flash",
+      "provider_id": "google",
+      "litellm_model": "gemini/gemini-2.5-flash",
+      "context_length": 1048576,
+      "input_cost_per_token": 0.0000001875,
+      "output_cost_per_token": 0.00000075,
+      "supports_functions": true,
+      "supports_vision": true,
+      "description": "Google's fast, high-performance Gemini 2.5 Flash model"
+    },
+    "gemini-2.5-pro": {
+      "id": "gemini-2.5-pro",
+      "name": "Gemini 2.5 Pro",
+      "provider_id": "google",
+      "litellm_model": "gemini/gemini-2.5-pro",
+      "context_length": 2097152,
+      "input_cost_per_token": 0.00000125,
+      "output_cost_per_token": 0.000005,
+      "supports_functions": true,
+      "supports_vision": true,
+      "description": "Google's advanced reasoning Gemini 2.5 Pro model"
+    },
+    "gemini-1.5-flash": {
+      "id": "gemini-1.5-flash",
+      "name": "Gemini 1.5 Flash",
+      "provider_id": "google",
+      "litellm_model": "gemini/gemini-1.5-flash",
+      "context_length": 1048576,
+      "input_cost_per_token": 0.000000075,
+      "output_cost_per_token": 0.0000003,
+      "supports_functions": true,
+      "supports_vision": true,
+      "description": "Google's fast and cost-efficient Gemini 1.5 Flash model"
+    },
+    "gemini-1.5-pro": {
+      "id": "gemini-1.5-pro",
+      "name": "Gemini 1.5 Pro",
+      "provider_id": "google",
+      "litellm_model": "gemini/gemini-1.5-pro",
+      "context_length": 2097152,
+      "input_cost_per_token": 0.00000125,
+      "output_cost_per_token": 0.000005,
+      "supports_functions": true,
+      "supports_vision": true,
+      "description": "Google's multimodal reasoning Gemini 1.5 Pro model"
+    }
+  },
+  "selection": {
+    "main_provider": "google",
+    "main_model": "gemini-2.5-flash",
+    "fallback_provider": "google",
+    "fallback_model": "gemini-2.5-pro",
+    "research_provider": "google",
+    "research_model": "gemini-2.5-pro"
+  },
+  "last_updated": "2026-08-17T09:00:00.000000"
+}

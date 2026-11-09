@@ -1,137 +1,178 @@
-# InsightIQ
+# Insightia — Production-Ready AI Data Analytics Platform
 
-InsightIQ is an AI-powered Business Intelligence (BI) and Analytics Platform designed to transform raw and structured datasets (Excel, CSV, JSON) into interactive, intelligent dashboards with automated insights, dynamic visualizations, and conversational data exploration.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB.svg?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Pandas](https://img.shields.io/badge/Pandas-2.2+-150458.svg?logo=pandas&logoColor=white)](https://pandas.pydata.org)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
 
----
-
-## 🚀 Key Capabilities
-
-### 📊 Dynamic Visualizations & Dashboards
-- **Automated KPI & Metric Extraction**: Automatically detects key business drivers, summary metrics, and dimensional hierarchies.
-- **Adaptive Chart Selection**: Intelligent mapping of data structures to optimal chart types (Line, Bar, Area, Scatter, Pie, and Composition charts).
-- **Interactive Analytics Workspace**: Filter, sort, pivot, and drill down into dataset dimensions with responsive layouts.
-- **Export & Reporting**: Multi-format reporting and data export capabilities.
-
-### 🤖 AI-Powered Analytics & Discovery
-- **Conversational Intelligence**: Ask natural-language questions about your data to generate on-the-fly calculations and chart responses.
-- **Automated Trend & Anomaly Detection**: Statistical and machine-learning pattern recognition for variance, outliers, and momentum.
-- **Estimated vs. Actual Variance Engine**: Semantic column matching, variance tracking, MAPE calculations, and correlation metrics.
-- **Multi-Provider AI Resilience**: Integrated with Google Gemini, LiteLLM, and OpenRouter with fallback handling and response caching.
-
-### 📁 Robust Dataset Management
-- **Hierarchical & Complex Excel Ingestion**: Advanced layout recognition, multi-level header handling, and table boundary detection.
-- **Data Cleaning & Standardization**: Automated type casting, missing value handling, deduplication, and schema validation.
-- **Fast Session Caching**: Optimized in-memory and local database caching for seamless data slicing without round-trip penalties.
+**Insightia** is an enterprise-grade, clean, "no-slop" data analytics and natural language intelligence platform. It transforms raw business datasets (CSV, Excel, JSON) into high-density interactive dashboards, automated EDA profiles, and grounded conversational intelligence.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## 🏛️ System Architecture & Reference Matrix
 
-### Frontend
-- **Framework**: React 18 (TypeScript)
-- **Tooling & Bundler**: Vite
-- **Styling**: Tailwind CSS, PostCSS
-- **Visuals & Charts**: Recharts, Lucide Icons
-- **State & Animation**: Motion, React Hooks
+Insightia was engineered using optimal tooling from the reference architecture:
 
-### Backend
-- **API Engine**: FastAPI (Python 3.11+)
-- **Data Processing**: Pandas, NumPy, OpenPyXL, Scikit-learn
-- **AI Orchestration**: Google Gemini SDK, LiteLLM, LangGraph
-- **Database & Storage**: SQLAlchemy, SQLite / PostgreSQL (Neon-compatible), Redis cache support
-- **Streaming**: WebSockets for real-time calculation progress and updates
+| System Layer | Selected Technology | Purpose & Capabilities |
+| :--- | :--- | :--- |
+| **AI Conversational Engine** | **Safe Sandboxed Pandas Engine** | AST-verified Python sandbox executing deterministic DataFrame queries with 0% math hallucination. |
+| **Multilingual NLP** | **English, Hindi & Hinglish Parser** | Seamlessly interprets natural queries (e.g. *"Is data ka sales distribution kaisa hai?"*, *"Top 5 categories by revenue"*). |
+| **Automated EDA & Profiling** | **Deep Analytical Engine** | Health scoring (0–100%), missingness distribution, IQR & Z-score outlier detection, Pearson correlation matrix. |
+| **Cleaning Pipeline** | **Deterministic Data Cleaner** | Mean/Median/Mode imputation, row deduplication, outlier filtering, type coercion, and transactional audit trails. |
+| **Frontend UI System** | **shadcn/ui + Tailwind CSS** | "Unslop" Linear / Supabase deep neutral dark mode (`zinc-950` canvas, `zinc-900` card surfaces, `zinc-800` borders). |
+| **Charts & Visualization** | **Recharts & Responsive Renderers** | Dynamic bar charts, line trends, scatter plots, and frequency distribution histograms. |
+| **Data Grid** | **High-Craft Interactive Table** | Virtualized pagination, search, sorting, and inline missing value/outlier cell highlighting. |
+| **Export Engine** | **Multi-Format Document Generator** | Cleaned CSV, formatted Excel (`.xlsx` with custom styles & metadata tab), JSON schema, and Executive PDF reports (`reportlab`). |
 
 ---
 
-## 📂 Repository Structure
+## 🚀 Core Platform Capabilities
+
+### 1. Intelligent Ingestion & Auto-Cleaning Engine
+- **Multi-Format Ingestion**: Ingests `.csv`, `.xlsx`, `.xls`, and `.json` datasets up to 50MB.
+- **Dataset Health Score (0–100%)**: Dynamically evaluated based on missing cell ratio, duplicate rows, data type purity, and statistical outliers.
+- **Automated Anomaly Detection**:
+  - **IQR Method**: Flags values beyond $[Q_1 - 1.5 \cdot IQR, Q_3 + 1.5 \cdot IQR]$.
+  - **Z-Score Method**: Flags extreme statistical outliers where $|z| > 3$.
+- **Precision Cleaning Actions**:
+  - `Impute`: Impute nulls with mean, median (skewness-resistant), or mode.
+  - `Drop Missing`: Drop rows with nulls globally or on selected columns.
+  - `Deduplicate`: Eliminate redundant records.
+  - `Remove Outliers`: Filter rows with extreme anomalies.
+  - `Coerce Types`: Normalize ISO date strings and sanitize currency strings into numerical formats.
+  - `One-Click Auto-Clean`: Multi-step automated cleaning pipeline with real-time audit metric feedback (e.g., *"Cleaned 38 null cells, removed 12 duplicate rows. Health score increased to 95%"*).
+
+### 2. Multilingual & Hinglish Natural Language Copilot
+- **The Grounding Rule**: The Copilot **never** invents or hallucinates math. Every analytical takeaway is computed by executing deterministic Python code inside an isolated, AST-verified sandbox (`pd`, `np`, `df`).
+- **Seamless English, Hindi, and Hinglish Comprehension**:
+  - *"Is data ka sales distribution kaisa hai?"* $\rightarrow$ Calculates quartiles, min/max, skewness; generates histogram payload; replies in conversational Hinglish.
+  - *"Top 5 categories by total revenue dikhao"* $\rightarrow$ Groups by category, aggregates revenue, sorts descending, returns verified figures + bar chart.
+  - *"Drop all missing rows in price column"* $\rightarrow$ Executes dropna, reports exact count dropped, updates the active dataset session.
+  - *"Show correlation between price and units sold"* $\rightarrow$ Computes Pearson $r$ and generates a scatter plot.
+- **Auditable Execution**: Every Copilot response includes a toggle to inspect the exact Python code executed.
+
+### 3. Multi-Format Export Engine
+- **Cleaned CSV (`.csv`)**: Normalized UTF-8 tabular data.
+- **Styled Excel (`.xlsx`)**: Generated via `openpyxl` with dark zinc headers, borders, zebra striping, auto-fit column widths, and a secondary "Executive Summary & Health" sheet.
+- **Clean JSON Schema (`.json`)**: Structured schema with dataset metadata, column types, and record arrays.
+- **Executive PDF Report (`.pdf`)**: Corporate executive summary generated via `reportlab` with health score badges, key KPI tables, schema specifications, and automated strategic insights.
+
+---
+
+## 🎨 Design Philosophy ("Unslop" Dark Mode)
+
+The interface follows a minimalist, high-density 3-panel workspace:
 
 ```
-.
-├── src/                          # InsightIQ Frontend Application (React + Vite)
-│   ├── components/               # UI components, dashboard widgets, charts
-│   ├── services/                 # API client, WebSocket managers, state handlers
-│   ├── hooks/                    # Custom React state and data hooks
-│   └── types/                    # TypeScript interfaces and data models
-├── backend/                      # InsightIQ FastAPI Backend
-│   ├── src/
-│   │   ├── agents/               # AI analytics agents and orchestrators
-│   │   ├── services/             # Excel parsing, layout detection, chart generators
-│   │   ├── routers/              # API route controllers (files, dashboard, chat, providers)
-│   │   └── core/                 # Database connection, security, and runtime configuration
-│   ├── config.env.example        # Backend environment variables template
-│   ├── requirements.txt          # Python dependencies
-│   └── main.py                   # Backend entry point
-├── .github/                      # CI/CD workflows
-│   └── workflows/
-│       └── full-stack-ci.yml     # Automated frontend & backend testing pipeline
-├── metadata.json                 # Project descriptor and platform capabilities
-├── package.json                  # Frontend dependencies and scripts
-└── vite.config.ts                # Vite configuration
+┌─────────────────┬──────────────────────────────────────────┬──────────────────────┐
+│  LEFT RAIL      │  CENTER CANVAS                           │  RIGHT COPILOT RAIL  │
+│  (320px)        │  (Flexible Main)                         │  (384px)             │
+│                 │                                          │                      │
+│ • Health Score  │ • KPI Summary Cards                      │ • Grounded Chat      │
+│ • One-Click     │ • Quick Sample Selector (E-Com, SaaS)   │ • Hinglish Support   │
+│   Auto-Clean    │ • Drag-and-Drop Ingestion Zone           │ • Inline Charts      │
+│ • Schema List   │ • Tab 1: Visual EDA & Histogram          │ • Verified Figures   │
+│ • Audit Trail   │ • Tab 2: High-Craft Data Grid (TanStack) │ • Executed Python    │
+│ • Export Bar    │ • Tab 3: Statistical Metrics & Pearson   │   Code Toggle        │
+└─────────────────┴──────────────────────────────────────────┴──────────────────────┘
 ```
+
+- **Palette**: Deep neutral dark mode (`zinc-950` canvas `#09090b`, `zinc-900` card surfaces `#18181b`, `zinc-800` borders `#27272a`, `zinc-100` headers `#f4f4f5`).
+- **Accents**: Subdued indigo (`#6366f1`) and emerald (`#10b981`).
+- **Zero Blank States**: Pre-loaded with curated sample business datasets (E-Commerce Sales, SaaS Churn, Corporate Ledger) for instant zero-friction exploration.
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Quick Start & Run Instructions
 
-### 1. Prerequisites
-- **Node.js**: 18.x or higher
-- **Python**: 3.11 or higher
-- **Package Managers**: `npm` (frontend) and `pip` (backend)
+### Prerequisites
+- Node.js 18+ & npm
+- Python 3.10+
 
-### 2. Frontend Setup
-Install dependencies and launch the development server:
+### Option A: Local Run (Quickest)
 
+#### 1. Start the Backend:
 ```bash
-npm install
+# Windows
+start_backend.bat
+
+# Or manually:
+cd backend
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+*Backend API will run at: `http://localhost:8000`*
+
+#### 2. Start the Frontend:
+```bash
+# Windows
+start_frontend.bat
+
+# Or manually:
 npm run dev
 ```
+*Frontend workspace will run at: `http://localhost:3000`*
 
-The application will be accessible at `http://localhost:3000`.
-
-### 3. Backend Setup
-From the project root:
-
+#### 3. Single-Command Launch (Windows):
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
+start_all.bat
 ```
-
-The FastAPI service runs at `http://localhost:8000` (interactive API docs available at `http://localhost:8000/docs`).
-
-### 4. Configuration
-- **Frontend**: Create a `.env` file based on `.env.example`:
-  ```env
-  GEMINI_API_KEY=your_gemini_key
-  DATABASE_URL=sqlite:///./insightiq.db
-  DEBUG=true
-  LOG_LEVEL=INFO
-  VITE_API_URL=http://localhost:3000
-  ```
-- **Backend**: Copy `backend/config.env.example` to `backend/config.env` and supply relevant credentials (OpenRouter, Gemini, or database connection strings).
 
 ---
 
-## 🧪 Testing & Validation
+### Option B: Docker Compose
 
-Run frontend tests and production builds:
+Launch the entire stack (FastAPI backend + Vite Nginx frontend) in isolated containers:
+
 ```bash
-# Frontend linting
-npm run lint
-
-# Production build
-npm run build
+docker-compose up --build
 ```
 
-Run backend test suite:
+Access the platform at `http://localhost:3000`.
+
+---
+
+## 📡 REST API Reference
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/data/upload` | `POST` | Ingests `.csv`, `.xlsx`, `.xls`, or `.json`, generates profile & session ID. |
+| `/api/data/sample/{sample_id}` | `GET` | Loads 1-click curated dataset (`ecommerce_sales`, `customer_churn`, `financial_kpi`). |
+| `/api/data/clean` | `POST` | Executes `impute`, `drop_na`, `remove_duplicates`, `remove_outliers`, `coerce_types`, or `auto_clean`. |
+| `/api/data/chat` | `POST` | Processes English / Hindi / Hinglish queries, executes safe Python code, returns chart & figures. |
+| `/api/data/profile/{session_id}` | `GET` | Retrieves dataset schema, statistics, health score, and audit log. |
+| `/api/data/export/{format}` | `GET` | Exports active dataset in `csv`, `xlsx`, `json`, or `pdf`. |
+
+---
+
+## 🧪 Verification & Testing
+
+Run the automated end-to-end integration test suite verifying file upload, automated profiling, Hinglish copilot execution, cleaning pipelines, and multi-format exports:
+
 ```bash
-cd backend
-python -m pytest tests/ -v
+python -c "
+import sys; sys.path.insert(0, 'backend')
+from fastapi.testclient import TestClient
+from main import app
+client = TestClient(app)
+r = client.get('/api/data/sample/ecommerce_sales')
+assert r.status_code == 200
+sid = r.json()['session_id']
+# Test Copilot
+r_chat = client.post('/api/data/chat', json={'session_id': sid, 'query': 'Is data ka sales distribution kaisa hai?'})
+assert r_chat.status_code == 200
+# Test Clean
+r_clean = client.post('/api/data/clean', json={'session_id': sid, 'action': 'auto_clean'})
+assert r_clean.status_code == 200
+# Test Export
+for fmt in ['csv', 'xlsx', 'json', 'pdf']:
+    assert client.get(f'/api/data/export/{fmt}?session_id={sid}').status_code == 200
+print('All tests passed successfully!')
+"
 ```
 
 ---
 
 ## 📄 License
-Proprietary & Confidential. All rights reserved.
+MIT License. Built for enterprise business intelligence and grounded AI data product design.
