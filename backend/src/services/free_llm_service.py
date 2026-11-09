@@ -1,6 +1,7 @@
 """
 Free LLM API Integration Service for Insightia.
 Provides zero-cost, high-speed LLM integration supporting:
+0. FreeLLMAPI Unified LLM Router (via FREELLMAPI_KEY / FREELLMAPI_API_KEY)
 1. Google Gemini API (gemini-2.0-flash / gemini-1.5-flash via GEMINI_API_KEY or GOOGLE_API_KEY)
 2. Groq Cloud API (llama-3.3-70b-versatile / mixtral-8x7b-32768 via GROQ_API_KEY)
 3. OpenRouter Free Tier (meta-llama/llama-3.3-70b-instruct:free via OPENROUTER_API_KEY)
@@ -11,6 +12,12 @@ import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 import httpx
 import numpy as np
@@ -58,10 +65,35 @@ class FreeLLMService:
     def get_api_credentials(cls) -> Dict[str, Optional[str]]:
         """Retrieve available API keys from environment."""
         return {
+            "freellmapi": os.getenv("FREELLMAPI_KEY") or os.getenv("FREELLMAPI_API_KEY"),
             "gemini": os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"),
             "groq": os.getenv("GROQ_API_KEY"),
             "openrouter": os.getenv("OPENROUTER_API_KEY"),
         }
+
+    @classmethod
+    def get_freellmapi_base_url(cls) -> str:
+        """Resolve the FreeLLMAPI base URL from environment or local desktop config."""
+        env_url = os.getenv("FREELLMAPI_BASE_URL") or os.getenv("FREELLMAPI_URL")
+        if env_url and env_url.strip():
+            return env_url.strip().rstrip("/")
+
+        # Check FreeLLMAPI Desktop config in %APPDATA% (Windows) or ~/.config (Linux/Mac)
+        appdata = os.getenv("APPDATA")
+        if appdata:
+            desktop_cfg = os.path.join(appdata, "FreeLLMAPI", "config.json")
+            if os.path.exists(desktop_cfg):
+                try:
+                    with open(desktop_cfg, "r", encoding="utf-8") as f:
+                        cfg = json.load(f)
+                        port = cfg.get("port")
+                        if port:
+                            return f"http://127.0.0.1:{port}/v1"
+                except Exception:
+                    pass
+
+        # Default desktop port is 31415, docker port is 3001
+        return "http://127.0.0.1:31415/v1"
 
     @classmethod
     def build_dataset_context(cls, df: pd.DataFrame, dataset_name: str = "Dataset") -> str:
@@ -121,6 +153,82 @@ TOP CORRELATIONS:
 {corr_summary}
 """
         return context.strip()
+
+    @classmethod
+    async def call_freellmapi(
+        cls,
+        api_key: str,
+        user_query: str,
+        context: str,
+        base_url: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Call FreeLLMAPI Unified LLM Router using OpenAI-compatible /v1/chat/completions."""
+        endpoint_base = (base_url or cls.get_freellmapi_base_url()).rstrip("/")
+        url = f"{endpoint_base}/chat/completions"
+        user_prompt = f"{context}\n\nUSER QUERY:\n\"{user_query}\"\n\nRespond strictly in valid JSON format matching the schema."
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        # Preferred models: user-specified model, then llama-3.3-70b (high speed free), auto, gemini-flash, free-router
+        candidate_models: List[str] = []
+        preferred_model = os.getenv("FREELLMAPI_MODEL")
+        if preferred_model and preferred_model.strip():
+            candidate_models.append(preferred_model.strip())
+
+        for m in ["llama-3.3-70b", "auto", "gemini-flash", "free-router"]:
+            if m not in candidate_models:
+                candidate_models.append(m)
+
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            for model in candidate_models:
+                try:
+                    payload = {
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.2
+                    }
+                    resp = await client.post(url, headers=headers, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        text = data["choices"][0]["message"]["content"]
+                        parsed = cls.clean_and_parse_json(text)
+                        if parsed:
+                            logger.info(f"FreeLLMAPI successfully generated grounded response using '{model}'")
+                            return parsed
+                    else:
+                        logger.warning(f"FreeLLMAPI ({model}) returned {resp.status_code}: {resp.text[:150]}")
+                except Exception as e:
+                    logger.warning(f"FreeLLMAPI model '{model}' call failed: {e}")
+
+        # If primary endpoint on 31415 failed, try fallback port 3001 if different
+        if ":31415" in endpoint_base:
+            alt_url = "http://127.0.0.1:3001/v1/chat/completions"
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    payload = {
+                        "model": "auto",
+                        "messages": [
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.2
+                    }
+                    resp = await client.post(alt_url, headers=headers, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        text = data["choices"][0]["message"]["content"]
+                        parsed = cls.clean_and_parse_json(text)
+                        if parsed:
+                            return parsed
+            except Exception:
+                pass
+
+        return None
 
     @classmethod
     async def call_gemini(cls, api_key: str, user_query: str, context: str) -> Optional[Dict[str, Any]]:
@@ -246,29 +354,37 @@ TOP CORRELATIONS:
     ) -> Optional[Dict[str, Any]]:
         """
         Attempt to query available free LLM APIs in priority order:
-        1. Gemini
-        2. Groq
-        3. OpenRouter
+        1. FreeLLMAPI Unified LLM Router (Local Desktop or Docker instance)
+        2. Gemini
+        3. Groq
+        4. OpenRouter
         Returns parsed structured JSON or None if unavailable.
         """
         creds = cls.get_api_credentials()
         context = cls.build_dataset_context(df, dataset_name=dataset_name)
 
-        # 1. Google Gemini
+        # 1. FreeLLMAPI Unified Router
+        if creds["freellmapi"] and creds["freellmapi"].strip():
+            logger.info("Calling FreeLLMAPI Unified Router...")
+            res = await cls.call_freellmapi(creds["freellmapi"].strip(), user_query, context)
+            if res:
+                return res
+
+        # 2. Google Gemini
         if creds["gemini"] and creds["gemini"].strip():
             logger.info("Calling Google Gemini Free API...")
             res = await cls.call_gemini(creds["gemini"].strip(), user_query, context)
             if res:
                 return res
 
-        # 2. Groq Cloud
+        # 3. Groq Cloud
         if creds["groq"] and creds["groq"].strip():
             logger.info("Calling Groq Cloud Free API...")
             res = await cls.call_groq(creds["groq"].strip(), user_query, context)
             if res:
                 return res
 
-        # 3. OpenRouter
+        # 4. OpenRouter
         if creds["openrouter"] and creds["openrouter"].strip():
             logger.info("Calling OpenRouter Free API...")
             res = await cls.call_openrouter(creds["openrouter"].strip(), user_query, context)
@@ -276,3 +392,4 @@ TOP CORRELATIONS:
                 return res
 
         return None
+

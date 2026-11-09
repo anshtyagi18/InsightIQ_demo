@@ -85,6 +85,8 @@ def run_tests():
     creds = FreeLLMService.get_api_credentials()
     active_keys = [k for k, v in creds.items() if v]
     print(f"  ℹ Configured Free LLM Keys: {active_keys if active_keys else 'None (Operating in local grounded sandbox mode)'}")
+    if "freellmapi" in active_keys:
+        print(f"  ℹ FreeLLMAPI Router Base URL: {FreeLLMService.get_freellmapi_base_url()}")
 
     sample_df = generate_sample_dataset("ecommerce_sales")
     session_id = "test-copilot-session"
