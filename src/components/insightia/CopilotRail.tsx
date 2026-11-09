@@ -161,26 +161,26 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
               Multilingual Copilot
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </h3>
-            <p className="text-[10px] text-zinc-500 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              Grounded Python Sandbox
+            <p className="text-xs text-zinc-400 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Grounded AI &amp; Python Sandbox
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-mono bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-          <Languages className="w-3 h-3 text-indigo-400" />
-          EN / HI
+        <div className="flex items-center gap-1.5 text-xs text-zinc-300 font-mono bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800">
+          <Languages className="w-3.5 h-3.5 text-indigo-400" />
+          EN / HI / HINGLISH
         </div>
       </div>
 
       {/* Suggested Prompt Chips */}
-      <div className="p-2 border-b border-zinc-800/80 bg-zinc-950/70 overflow-x-auto flex gap-1.5 no-scrollbar">
+      <div className="p-2.5 border-b border-zinc-800/80 bg-zinc-950/70 overflow-x-auto flex gap-2 no-scrollbar">
         {SUGGESTED_PROMPTS.map((prompt, idx) => (
           <button
             key={idx}
             onClick={() => handleSend(prompt)}
             disabled={isProcessing || !sessionId}
-            className="text-[10px] whitespace-nowrap bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-zinc-100 px-2 py-1 rounded transition-colors disabled:opacity-40"
+            className="text-xs whitespace-nowrap bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-200 hover:text-white px-2.5 py-1.5 rounded-md transition-colors disabled:opacity-40 font-medium"
           >
             {prompt}
           </button>
@@ -212,12 +212,12 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
 
                 {/* Renderable Interactive Chart in Message */}
                 {msg.chart_payload && (
-                  <div className="mt-3 p-2.5 bg-zinc-950/80 rounded border border-zinc-800">
+                  <div className="mt-3 p-3 bg-zinc-950/80 rounded-lg border border-zinc-800">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-semibold text-zinc-200">
+                      <span className="text-xs font-semibold text-zinc-100">
                         {msg.chart_payload.title}
                       </span>
-                      <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/40">
+                      <span className="text-xs uppercase font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/40 font-semibold">
                         {msg.chart_payload.chartType}
                       </span>
                     </div>
@@ -227,17 +227,17 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
                         {msg.chart_payload.chartType === 'scatter' ? (
                           <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: -20 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                            <XAxis dataKey="x" stroke="#71717a" fontSize={10} />
-                            <YAxis dataKey="y" stroke="#71717a" fontSize={10} />
-                            <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '11px', color: '#f4f4f5' }} />
+                            <XAxis dataKey="x" stroke="#a1a1aa" fontSize={11} />
+                            <YAxis dataKey="y" stroke="#a1a1aa" fontSize={11} />
+                            <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '12px', color: '#f4f4f5' }} />
                             <Scatter data={msg.chart_payload.data} fill="#818cf8" />
                           </ScatterChart>
                         ) : (
                           <BarChart data={msg.chart_payload.data} margin={{ top: 10, right: 10, bottom: 20, left: -20 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                            <XAxis dataKey="name" stroke="#71717a" fontSize={9} interval={0} angle={-25} textAnchor="end" />
-                            <YAxis stroke="#71717a" fontSize={10} />
-                            <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '11px', color: '#f4f4f5' }} />
+                            <XAxis dataKey="name" stroke="#a1a1aa" fontSize={11} interval={0} angle={-25} textAnchor="end" />
+                            <YAxis stroke="#a1a1aa" fontSize={11} />
+                            <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', fontSize: '12px', color: '#f4f4f5' }} />
                             <Bar dataKey="value" fill="#6366f1" radius={[3, 3, 0, 0]} />
                           </BarChart>
                         )}
@@ -245,7 +245,7 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
                     </div>
 
                     {msg.chart_payload.insights && msg.chart_payload.insights.length > 0 && (
-                      <div className="mt-2 text-[10px] text-zinc-400 space-y-0.5">
+                      <div className="mt-2 text-xs text-zinc-300 space-y-0.5">
                         {msg.chart_payload.insights.map((ins, i) => (
                           <p key={i}>• {ins}</p>
                         ))}
@@ -259,17 +259,17 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
                   <div className="mt-2.5 pt-2 border-t border-zinc-800">
                     <button
                       onClick={() => toggleCodeExpansion(msg.id)}
-                      className="flex items-center justify-between w-full text-[10px] text-zinc-400 hover:text-zinc-200 transition-colors"
+                      className="flex items-center justify-between w-full text-xs text-zinc-300 hover:text-white transition-colors"
                     >
-                      <span className="flex items-center gap-1 font-mono">
-                        <Terminal className="w-3 h-3 text-indigo-400" />
+                      <span className="flex items-center gap-1.5 font-mono">
+                        <Terminal className="w-3.5 h-3.5 text-indigo-400" />
                         Executed Python Code
                       </span>
-                      {isCodeExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      {isCodeExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
                     {isCodeExpanded && (
-                      <pre className="mt-1.5 p-2 bg-zinc-950 rounded border border-zinc-800 text-[10px] font-mono text-zinc-300 overflow-x-auto whitespace-pre-wrap">
+                      <pre className="mt-1.5 p-2.5 bg-zinc-950 rounded-md border border-zinc-800 text-xs font-mono text-zinc-200 overflow-x-auto whitespace-pre-wrap">
                         {msg.executed_code}
                       </pre>
                     )}
@@ -277,7 +277,7 @@ export const CopilotRail: React.FC<CopilotRailProps> = ({
                 )}
               </div>
 
-              <span className="text-[9px] text-zinc-500 font-mono px-1">
+              <span className="text-xs text-zinc-400 font-mono px-1">
                 {msg.timestamp}
               </span>
             </div>

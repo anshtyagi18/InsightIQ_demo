@@ -222,14 +222,14 @@ export const PrelineSurveyView: React.FC = () => {
                       <img src={f.avatar} alt={f.author} className="w-7 h-7 rounded-full object-cover border border-[#27272a]" />
                       <div>
                         <p className="text-xs font-bold text-zinc-100">{f.author}</p>
-                        <p className="text-[10px] text-zinc-500">{f.role}</p>
+                        <p className="text-xs text-zinc-400 font-medium">{f.role}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-0.5">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-3 h-3 ${
+                          className={`w-3.5 h-3.5 ${
                             i < f.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-700'
                           }`}
                         />
@@ -237,17 +237,17 @@ export const PrelineSurveyView: React.FC = () => {
                     </div>
                   </div>
 
-                  <p className="text-xs text-zinc-300 leading-relaxed">
+                  <p className="text-sm text-zinc-200 leading-relaxed">
                     "{f.comment}"
                   </p>
 
                   <div className="flex items-center gap-1.5 pt-1">
                     {f.tags.map((tag) => (
-                      <span key={tag} className="text-[10px] bg-[#1a1a20] border border-[#27272a] text-zinc-300 px-2 py-0.5 rounded">
+                      <span key={tag} className="text-xs font-medium bg-[#1a1a20] border border-[#27272a] text-zinc-200 px-2 py-0.5 rounded">
                         {tag}
                       </span>
                     ))}
-                    <span className="text-[10px] text-zinc-500 ml-auto">{f.date}</span>
+                    <span className="text-xs text-zinc-400 ml-auto font-mono">{f.date}</span>
                   </div>
                 </div>
               ))}

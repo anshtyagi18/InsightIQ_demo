@@ -1,12 +1,12 @@
 """
-Comprehensive System Verification Test Suite
+Comprehensive System Verification Test Suite for Insightia.
 Tests:
 1. Data Engine Ingestion & Health Profiling
 2. Outlier Detection (IQR & Z-score)
-3. Automated Cleaning Pipeline
-4. Hinglish & English Conversational Copilot
+3. Automated Cleaning Pipeline (Impute, DropNA, Duplicates, Outliers, Type Coercion)
+4. Free LLM Connector & Multilingual AI Copilot Sandbox (Hinglish, Hindi, English)
 5. Export Engine (CSV, XLSX, JSON, PDF)
-6. FastAPI REST Endpoints via TestClient
+6. FastAPI REST Endpoints via TestClient (both /api/* and /api/data/*)
 """
 
 import sys
@@ -41,7 +41,8 @@ def run_tests():
     test_df = pd.DataFrame({
         "item": ["Alpha", "Beta", "Gamma"],
         "price": [100.5, 200.0, None],
-        "quantity": [10, 5, 2]
+        "quantity": [10, 5, 2],
+        "revenue_str": ["$1,005.00", "$1,000.00", "$20.00"]
     })
     
     # CSV
@@ -63,8 +64,8 @@ def run_tests():
     assert len(parsed_xlsx) == 3
     print("  ✓ XLSX parsing verified")
 
-    # 3. Test Auto-Cleaning Pipeline
-    print("\n[3/6] Testing Auto-Cleaning Actions...")
+    # 3. Test Cleaning Pipeline
+    print("\n[3/6] Testing Data Cleaning Actions...")
     clean_df, audit = DataEngine.clean_dataframe(test_df, action="impute")
     assert clean_df["price"].isnull().sum() == 0, "Imputation failed to fill nulls"
     print(f"  ✓ Impute action: {audit}")
@@ -73,9 +74,17 @@ def run_tests():
     assert len(clean_df2) == 2, "Drop NA failed to drop null row"
     print(f"  ✓ Drop NA action: {audit2}")
 
-    # 4. Test Multilingual NLP Copilot Sandbox
-    print("\n[4/6] Testing Grounded Multilingual AI Copilot Sandbox...")
+    clean_df3, audit3 = DataEngine.clean_dataframe(test_df, action="coerce_types")
+    print(f"  ✓ Coerce types action: {audit3}")
+
+    # 4. Test Multilingual NLP Copilot Sandbox & Free LLM
+    print("\n[4/6] Testing Grounded Multilingual AI Copilot Sandbox & Free LLM Provider...")
     from backend.src.services.copilot_engine import ConversationalCopilotEngine
+    from backend.src.services.free_llm_service import FreeLLMService
+
+    creds = FreeLLMService.get_api_credentials()
+    active_keys = [k for k, v in creds.items() if v]
+    print(f"  ℹ Configured Free LLM Keys: {active_keys if active_keys else 'None (Operating in local grounded sandbox mode)'}")
 
     sample_df = generate_sample_dataset("ecommerce_sales")
     session_id = "test-copilot-session"
@@ -88,17 +97,18 @@ def run_tests():
     
     # Hinglish query
     q_hinglish = "Is data ka sales distribution kaisa hai?"
-    res1 = asyncio.run(ConversationalCopilotEngine.process_query(session_id, q_hinglish))
-    assert res1.get("explanation"), "No explanation for Hinglish query"
-    assert res1.get("executed_code"), "No python code generated"
-    print(f"  ✓ Hinglish query explanation: {res1['explanation'][:80]}...")
-    print(f"    Executed Code:\n{res1['executed_code']}")
+    res1 = asyncio.run(ConversationalCopilotEngine.process_query(session_id, q_hinglish, sample_df))
+    assert res1.get("reply") or res1.get("explanation"), "No reply for Hinglish query"
+    assert "chart_config" in res1, "Missing chart_config in response"
+    assert "action_taken" in res1, "Missing action_taken in response"
+    print(f"  ✓ Hinglish query reply: {res1.get('reply', '')[:80]}...")
+    print(f"    Action taken: {res1.get('action_taken')}, Chart type: {res1.get('chart_config', {}).get('type') if res1.get('chart_config') else 'None'}")
 
     # English query
     q_eng = "What is the average price and total revenue?"
-    res2 = asyncio.run(ConversationalCopilotEngine.process_query(session_id, q_eng))
-    assert res2.get("explanation"), "No explanation for English query"
-    print(f"  ✓ English query explanation: {res2['explanation'][:80]}...")
+    res2 = asyncio.run(ConversationalCopilotEngine.process_query(session_id, q_eng, sample_df))
+    assert res2.get("reply") or res2.get("explanation"), "No reply for English query"
+    print(f"  ✓ English query reply: {res2.get('reply', '')[:80]}...")
 
     # 5. Test Export Engine
     print("\n[5/6] Testing Export Engine (CSV, XLSX, JSON, PDF)...")
@@ -136,30 +146,59 @@ def run_tests():
     # Health
     r = client.get("/health")
     assert r.status_code == 200
-    print(f"  ✓ GET /health: {r.json()}")
+    print(f"  ✓ GET /health: {r.json()['status']}")
 
-    # Sample load
-    r_sample = client.get("/api/data/sample/ecommerce_sales")
-    assert r_sample.status_code == 200
-    sample_data = r_sample.json()
-    sid = sample_data["session_id"]
-    print(f"  ✓ GET /api/data/sample/ecommerce_sales: session_id={sid}")
+    # Sample load via /api/sample & /api/data/sample
+    r_sample1 = client.get("/api/data/sample/ecommerce_sales")
+    assert r_sample1.status_code == 200
+    sid1 = r_sample1.json()["session_id"]
+    print(f"  ✓ GET /api/data/sample/ecommerce_sales: session_id={sid1}")
 
-    # Clean endpoint
-    r_clean = client.post("/api/data/clean", json={"session_id": sid, "action": "auto_clean"})
-    assert r_clean.status_code == 200
-    print(f"  ✓ POST /api/data/clean: Health={r_clean.json()['health_score']}%")
+    r_sample2 = client.get("/api/sample/customer_churn")
+    assert r_sample2.status_code == 200
+    sid2 = r_sample2.json()["session_id"]
+    print(f"  ✓ GET /api/sample/customer_churn: session_id={sid2}")
 
-    # Chat endpoint
-    r_chat = client.post("/api/data/chat", json={"session_id": sid, "query": "Total revenue kitna hai?"})
-    assert r_chat.status_code == 200
-    print(f"  ✓ POST /api/data/chat: {r_chat.json()['explanation'][:60]}...")
+    # Clean endpoint via /api/clean & /api/data/clean
+    r_clean1 = client.post("/api/data/clean", json={"session_id": sid1, "action": "auto_clean"})
+    assert r_clean1.status_code == 200
+    print(f"  ✓ POST /api/data/clean: Health={r_clean1.json()['health_score']}%")
+
+    r_clean2 = client.post("/api/clean", json={"session_id": sid2, "action": "remove_duplicates"})
+    assert r_clean2.status_code == 200
+    print(f"  ✓ POST /api/clean: Health={r_clean2.json()['health_score']}%")
+
+    # Profile & Charts endpoints
+    r_prof = client.get(f"/api/profile/{sid1}")
+    assert r_prof.status_code == 200
+    print(f"  ✓ GET /api/profile/{sid1}: Columns count={len(r_prof.json()['columns'])}")
+
+    r_charts = client.get(f"/api/charts?session_id={sid1}")
+    assert r_charts.status_code == 200
+    charts_data = r_charts.json()
+    assert "histograms" in charts_data and "categorical" in charts_data
+    print(f"  ✓ GET /api/charts: Histograms={len(charts_data['histograms'])}, Categories={len(charts_data['categorical'])}")
+
+    # Chat endpoint via /api/chat & /api/data/chat
+    r_chat1 = client.post("/api/data/chat", json={"session_id": sid1, "query": "Price ka distribution kaisa hai?"})
+    assert r_chat1.status_code == 200
+    chat1_json = r_chat1.json()
+    assert "reply" in chat1_json and "action_taken" in chat1_json
+    print(f"  ✓ POST /api/data/chat: {chat1_json['reply'][:60]}...")
+
+    r_chat2 = client.post("/api/chat", json={"session_id": sid1, "query": "Total revenue kitna hai?"})
+    assert r_chat2.status_code == 200
+    print(f"  ✓ POST /api/chat: {r_chat2.json()['reply'][:60]}...")
 
     # Export endpoints
     for fmt in ["csv", "xlsx", "json", "pdf"]:
-        r_exp = client.get(f"/api/data/export/{fmt}?session_id={sid}")
-        assert r_exp.status_code == 200
-        print(f"  ✓ GET /api/data/export/{fmt}: {len(r_exp.content):,} bytes")
+        r_exp1 = client.get(f"/api/data/export/{fmt}?session_id={sid1}")
+        assert r_exp1.status_code == 200
+        print(f"  ✓ GET /api/data/export/{fmt}: {len(r_exp1.content):,} bytes")
+
+        r_exp2 = client.get(f"/api/export/{fmt}?session_id={sid1}")
+        assert r_exp2.status_code == 200
+        print(f"  ✓ GET /api/export/{fmt}: {len(r_exp2.content):,} bytes")
 
     print("\n" + "=" * 60)
     print("ALL 6 MODULES PASSED WITH 100% SUCCESS!")

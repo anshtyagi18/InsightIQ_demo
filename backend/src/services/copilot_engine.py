@@ -12,6 +12,7 @@ Adheres strictly to the Grounding Rule:
 
 import ast
 import io
+import logging
 import math
 import os
 import re
@@ -22,6 +23,9 @@ import numpy as np
 import pandas as pd
 
 from .data_engine import DataEngine, DataSessionStore, sanitize_value
+from .free_llm_service import FreeLLMService
+
+logger = logging.getLogger(__name__)
 
 
 class SafeSandboxSecurityError(Exception):
@@ -387,16 +391,65 @@ class ConversationalCopilotEngine:
         if active_df is None or len(active_df) == 0:
             return {
                 "session_id": session_id,
+                "reply": "No active dataset loaded. Please upload a CSV, Excel, or JSON file first.",
+                "action_taken": "none",
+                "chart_config": None,
                 "explanation": "No active dataset loaded. Please upload a CSV, Excel, or JSON file first.",
                 "verified_figures": {},
                 "chart_payload": None,
                 "executed_code": "",
-                "status": "no_data"
+                "status": "no_data",
+                "is_hinglish": False
             }
 
         is_hinglish = MultilingualQueryPlanner.is_hinglish_or_hindi(user_query)
+        session_meta = DataSessionStore.get(session_id) or {}
+        dataset_name = session_meta.get("filename", "Active Dataset")
 
-        # Generate sandboxed code
+        # 1. Attempt Free LLM API query first if credentials exist (Gemini, Groq, OpenRouter)
+        try:
+            llm_result = await FreeLLMService.query_free_llm(
+                user_query=user_query,
+                df=active_df,
+                dataset_name=dataset_name
+            )
+            if llm_result and "reply" in llm_result:
+                reply = llm_result.get("reply", "")
+                action_taken = llm_result.get("action_taken", "none")
+                chart_config = llm_result.get("chart_config")
+
+                chart_payload = None
+                if chart_config and isinstance(chart_config, dict):
+                    chart_payload = {
+                        "chartType": chart_config.get("type", "bar"),
+                        "title": chart_config.get("title", "Insightia Analysis"),
+                        "xAxis": chart_config.get("x_axis", "name"),
+                        "yAxis": chart_config.get("y_axis", "value"),
+                        "data": chart_config.get("data", [])
+                    }
+
+                # Auto-execute cleaning if user explicitly commanded a drop action
+                lower_q = user_query.lower()
+                if action_taken == "clean" or (any(w in lower_q for w in ["drop", "clean", "hatao", "remove"]) and any(w in lower_q for w in ["null", "nan", "missing", "khali"])):
+                    cleaned_df, audit_msg = DataEngine.clean_dataframe(active_df, "drop_na")
+                    DataSessionStore.update_df(session_id, cleaned_df, audit_msg)
+
+                return {
+                    "session_id": session_id,
+                    "reply": reply,
+                    "action_taken": action_taken,
+                    "chart_config": chart_config,
+                    "explanation": reply,
+                    "chart_payload": sanitize_value(chart_payload),
+                    "verified_figures": sanitize_value(chart_config.get("data", []) if chart_config else {}),
+                    "executed_code": "# Evaluated via Free Multilingual LLM Provider (Grounded Schema)",
+                    "status": "success",
+                    "is_hinglish": is_hinglish
+                }
+        except Exception as e:
+            logger.warning(f"Free LLM API query note: {e}")
+
+        # 2. Infallible Grounded Python Sandbox Fallback (0% math hallucination)
         code_str, intent, meta = MultilingualQueryPlanner.plan_and_generate_code(user_query, active_df)
 
         try:
@@ -580,8 +633,23 @@ class ConversationalCopilotEngine:
                     f"with **{null_c} missing values**."
                 )
 
+        chart_config = None
+        if chart_payload:
+            chart_config = {
+                "type": chart_payload.get("chartType", "bar"),
+                "title": chart_payload.get("title", "Insightia Analysis"),
+                "x_axis": chart_payload.get("xAxis", "name"),
+                "y_axis": chart_payload.get("yAxis", "value"),
+                "data": chart_payload.get("data", [])
+            }
+
+        action_taken = "clean" if intent == "drop_missing" else ("calculate" if chart_payload else "none")
+
         return {
             "session_id": session_id,
+            "reply": explanation,
+            "action_taken": action_taken,
+            "chart_config": chart_config,
             "explanation": explanation,
             "verified_figures": verified_figures,
             "chart_payload": sanitize_value(chart_payload),

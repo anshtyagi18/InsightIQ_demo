@@ -112,7 +112,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
               {profile ? profile.dataset_name : 'AI Data Analytics Platform'}
             </h1>
             {profile && (
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
+              <span className={`text-xs font-mono px-2.5 py-0.5 rounded border font-semibold ${
                 profile.health_score >= 85 
                   ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40' 
                   : 'bg-amber-950/60 text-amber-400 border-amber-800/40'
@@ -121,7 +121,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-sm text-zinc-300 mt-0.5">
             {profile 
               ? `${profile.total_rows.toLocaleString()} records • ${profile.total_cols} dimensions • Deterministic Pandas Engine`
               : 'Enterprise automated EDA, clean pipelines, and grounded multilingual intelligence'
@@ -130,7 +130,7 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
         </div>
 
         {/* Upload Button */}
-        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-200 transition-colors shadow-sm">
+        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-100 transition-colors shadow-sm">
           <UploadCloud className="w-3.5 h-3.5 text-indigo-400" />
           <span>Upload File (.csv, .xlsx, .json)</span>
           <input 
@@ -214,51 +214,51 @@ export const CenterCanvas: React.FC<CenterCanvasProps> = ({
             {/* KPI Cards Strip */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
-                <span className="text-[11px] text-zinc-500 font-medium">Total Rows</span>
-                <p className="text-lg font-bold font-mono text-zinc-100 mt-0.5">
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Total Rows</span>
+                <p className="text-xl font-bold font-mono text-zinc-100 mt-1">
                   {profile.total_rows.toLocaleString()}
                 </p>
-                <span className="text-[10px] text-zinc-500">Records</span>
+                <span className="text-xs text-zinc-400 font-medium">Records</span>
               </div>
 
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
-                <span className="text-[11px] text-zinc-500 font-medium">Features</span>
-                <p className="text-lg font-bold font-mono text-zinc-100 mt-0.5">
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Features</span>
+                <p className="text-xl font-bold font-mono text-zinc-100 mt-1">
                   {profile.total_cols}
                 </p>
-                <span className="text-[10px] text-zinc-500">Columns</span>
+                <span className="text-xs text-zinc-400 font-medium">Columns</span>
               </div>
 
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
-                <span className="text-[11px] text-zinc-500 font-medium">Missing Cells</span>
-                <p className={`text-lg font-bold font-mono mt-0.5 ${profile.missing_cells > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Missing Cells</span>
+                <p className={`text-xl font-bold font-mono mt-1 ${profile.missing_cells > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                   {profile.missing_cells}
                 </p>
-                <span className="text-[10px] text-zinc-500">{profile.missing_rate}% rate</span>
+                <span className="text-xs text-zinc-400 font-medium">{profile.missing_rate}% rate</span>
               </div>
 
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
-                <span className="text-[11px] text-zinc-500 font-medium">Duplicate Rows</span>
-                <p className={`text-lg font-bold font-mono mt-0.5 ${profile.duplicate_rows > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Duplicate Rows</span>
+                <p className={`text-xl font-bold font-mono mt-1 ${profile.duplicate_rows > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                   {profile.duplicate_rows}
                 </p>
-                <span className="text-[10px] text-zinc-500">{profile.duplicate_rate}% rate</span>
+                <span className="text-xs text-zinc-400 font-medium">{profile.duplicate_rate}% rate</span>
               </div>
 
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
-                <span className="text-[11px] text-zinc-500 font-medium">Outliers (IQR)</span>
-                <p className={`text-lg font-bold font-mono mt-0.5 ${profile.outlier_count > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Outliers (IQR)</span>
+                <p className={`text-xl font-bold font-mono mt-1 ${profile.outlier_count > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                   {profile.outlier_count}
                 </p>
-                <span className="text-[10px] text-zinc-500">1.5x boundary</span>
+                <span className="text-xs text-zinc-400 font-medium">1.5x boundary</span>
               </div>
 
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg">
-                <span className="text-[11px] text-zinc-500 font-medium">Health Score</span>
-                <p className={`text-lg font-bold font-mono mt-0.5 ${profile.health_score >= 85 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Health Score</span>
+                <p className={`text-xl font-bold font-mono mt-1 ${profile.health_score >= 85 ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {profile.health_score}%
                 </p>
-                <span className="text-[10px] text-zinc-500">
+                <span className="text-xs text-zinc-400 font-medium">
                   {profile.health_score >= 85 ? 'Excellent' : 'Needs Clean'}
                 </span>
               </div>

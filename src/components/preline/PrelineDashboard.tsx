@@ -30,6 +30,7 @@ import { PrelineVisitorsView } from './PrelineVisitorsView';
 import { PrelineSurveyView } from './PrelineSurveyView';
 import { PrelineIncidentsView } from './PrelineIncidentsView';
 import { PrelineEmptyView } from './PrelineEmptyView';
+import { InsightiaWorkspace } from '@/components/insightia/InsightiaWorkspace';
 import { DatasetProfile, dataIntelligenceService } from '@/services/data-intelligence.service';
 import { toast } from 'sonner';
 
@@ -380,6 +381,13 @@ export const PrelineDashboard: React.FC = () => {
                 </div>
               )}
             </>
+          )}
+
+          {/* INSIGHTIA 3-PANEL STUDIO VIEW */}
+          {activeView === 'workspace' && (
+            <div className="w-full h-full -m-6 overflow-hidden">
+              <InsightiaWorkspace />
+            </div>
           )}
 
           {/* VISITORS VIEW */}

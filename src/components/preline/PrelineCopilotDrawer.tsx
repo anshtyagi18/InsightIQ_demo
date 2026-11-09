@@ -165,8 +165,8 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono font-medium text-zinc-400 bg-[#18181d] px-2 py-0.5 rounded border border-[#27272a]">
-            EN / HI
+          <span className="text-xs font-mono font-semibold text-zinc-300 bg-[#18181d] px-2.5 py-1 rounded border border-[#27272a]">
+            EN / HI / HINGLISH
           </span>
           <button
             onClick={onClose}
@@ -218,7 +218,7 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
                       <span className="text-xs font-semibold text-zinc-100">
                         {msg.chart_payload.title}
                       </span>
-                      <span className="text-[10px] font-mono uppercase bg-blue-600/15 text-blue-400 border border-blue-500/20 px-1.5 py-0.2 rounded font-medium">
+                      <span className="text-xs font-mono uppercase bg-blue-600/15 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-semibold">
                         {msg.chart_payload.chartType}
                       </span>
                     </div>
@@ -228,13 +228,13 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
                         {msg.chart_payload.chartType === 'scatter' ? (
                           <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: -20 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                            <XAxis dataKey="x" stroke="#71717a" fontSize={10} />
-                            <YAxis dataKey="y" stroke="#71717a" fontSize={10} />
+                            <XAxis dataKey="x" stroke="#a1a1aa" fontSize={11} />
+                            <YAxis dataKey="y" stroke="#a1a1aa" fontSize={11} />
                             <Tooltip
                               contentStyle={{
                                 backgroundColor: '#141418',
                                 borderColor: '#27272a',
-                                fontSize: '11px',
+                                fontSize: '12px',
                                 color: '#F4F4F5',
                               }}
                             />
@@ -248,18 +248,18 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
                             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                             <XAxis
                               dataKey="name"
-                              stroke="#71717a"
-                              fontSize={9}
+                              stroke="#a1a1aa"
+                              fontSize={11}
                               interval={0}
                               angle={-25}
                               textAnchor="end"
                             />
-                            <YAxis stroke="#71717a" fontSize={10} />
+                            <YAxis stroke="#a1a1aa" fontSize={11} />
                             <Tooltip
                               contentStyle={{
                                 backgroundColor: '#141418',
                                 borderColor: '#27272a',
-                                fontSize: '11px',
+                                fontSize: '12px',
                                 color: '#F4F4F5',
                               }}
                             />
@@ -270,7 +270,7 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
                     </div>
 
                     {msg.chart_payload.insights && msg.chart_payload.insights.length > 0 && (
-                      <div className="mt-2 text-[10px] text-zinc-400 space-y-0.5 border-t border-[#27272a] pt-1.5">
+                      <div className="mt-2 text-xs text-zinc-300 space-y-0.5 border-t border-[#27272a] pt-1.5">
                         {msg.chart_payload.insights.map((ins, i) => (
                           <p key={i}>• {ins}</p>
                         ))}
@@ -284,17 +284,17 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
                   <div className="mt-2 pt-2 border-t border-[#27272a]">
                     <button
                       onClick={() => toggleCodeExpansion(msg.id)}
-                      className="flex items-center justify-between w-full text-[10px] text-zinc-400 hover:text-zinc-200 transition-colors"
+                      className="flex items-center justify-between w-full text-xs text-zinc-300 hover:text-white transition-colors"
                     >
                       <span className="flex items-center gap-1 font-mono">
-                        <Terminal className="w-3 h-3 text-blue-400" />
+                        <Terminal className="w-3.5 h-3.5 text-blue-400" />
                         Executed Python Code
                       </span>
-                      {isCodeExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      {isCodeExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
                     {isCodeExpanded && (
-                      <pre className="mt-1.5 p-2 bg-[#09090b] border border-[#27272a] text-zinc-300 rounded-lg text-[10px] font-mono overflow-x-auto whitespace-pre-wrap">
+                      <pre className="mt-1.5 p-2 bg-[#09090b] border border-[#27272a] text-zinc-200 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap">
                         {msg.executed_code}
                       </pre>
                     )}
@@ -302,7 +302,7 @@ export const PrelineCopilotDrawer: React.FC<PrelineCopilotDrawerProps> = ({
                 )}
               </div>
 
-              <span className="text-[10px] text-zinc-500 font-mono px-2">
+              <span className="text-xs text-zinc-400 font-mono px-2">
                 {msg.timestamp}
               </span>
             </div>

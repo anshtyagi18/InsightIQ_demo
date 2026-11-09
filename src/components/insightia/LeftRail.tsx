@@ -97,16 +97,16 @@ export const LeftRail: React.FC<LeftRailProps> = ({
             IQ
           </div>
           <span className="font-semibold text-zinc-100 text-sm tracking-tight">Insightia</span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">PRO</span>
+          <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">PRO</span>
         </div>
-        <span className="text-[10px] text-zinc-500 font-mono">v2.0</span>
+        <span className="text-xs text-zinc-400 font-mono">v2.0</span>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
         {/* Health Score Gauge */}
         <div className={`p-3 rounded-lg border ${healthBg} transition-all`}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-medium text-zinc-300">Data Health Score</span>
+            <span className="text-xs font-semibold text-zinc-200">Data Health Score</span>
             <span className={`text-base font-bold font-mono ${healthColor}`}>{healthScore}%</span>
           </div>
           {/* Progress bar */}
@@ -118,7 +118,7 @@ export const LeftRail: React.FC<LeftRailProps> = ({
               style={{ width: `${healthScore}%` }}
             />
           </div>
-          <div className="flex justify-between items-center mt-2 text-[10px] text-zinc-400 font-mono">
+          <div className="flex justify-between items-center mt-2 text-xs text-zinc-300 font-mono">
             <span>Missing: {profile.missing_rate}%</span>
             <span>Dups: {profile.duplicate_rows}</span>
             <span>Outliers: {profile.outlier_count}</span>
@@ -173,32 +173,32 @@ export const LeftRail: React.FC<LeftRailProps> = ({
                 className="flex items-center justify-between p-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 rounded text-xs transition-colors"
               >
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <span className={`text-[9px] font-mono font-medium px-1 py-0.5 rounded ${
+                  <span className={`text-xs font-mono font-medium px-1.5 py-0.5 rounded ${
                     col.type === 'numeric' ? 'bg-indigo-950 text-indigo-300 border border-indigo-800/50' :
                     col.type === 'datetime' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800/50' :
                     col.type === 'categorical' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/50' :
-                    'bg-zinc-800 text-zinc-400'
+                    'bg-zinc-800 text-zinc-300'
                   }`}>
                     {col.type.slice(0, 3).toUpperCase()}
                   </span>
-                  <span className="text-zinc-200 truncate font-mono text-[11px]" title={col.name}>
+                  <span className="text-zinc-200 truncate font-mono text-xs font-medium" title={col.name}>
                     {col.name}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1 text-[10px] font-mono shrink-0">
+                <div className="flex items-center gap-1.5 text-xs font-mono shrink-0">
                   {col.missing_count > 0 && (
-                    <span className="text-amber-400 bg-amber-950/60 px-1 rounded border border-amber-800/30">
+                    <span className="text-amber-400 bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-800/40 font-semibold">
                       {col.missing_count} null
                     </span>
                   )}
                   {col.outliers_count > 0 && (
-                    <span className="text-rose-400 bg-rose-950/60 px-1 rounded border border-rose-800/30">
+                    <span className="text-rose-400 bg-rose-950/60 px-1.5 py-0.2 rounded border border-rose-800/40 font-semibold">
                       {col.outliers_count} out
                     </span>
                   )}
                   {col.missing_count === 0 && col.outliers_count === 0 && (
-                    <span className="text-zinc-500">100%</span>
+                    <span className="text-emerald-400 font-medium">100%</span>
                   )}
                 </div>
               </div>

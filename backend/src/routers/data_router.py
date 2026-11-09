@@ -2,6 +2,7 @@
 Data & Analytics Router for Insightia.
 Provides RESTful APIs for file ingestion, automated EDA, data cleaning pipelines,
 multilingual AI copilot, and multi-format exports.
+Supports both /api/* and /api/data/* paths for maximum client compatibility.
 """
 
 import io
@@ -18,7 +19,11 @@ from ..services.copilot_engine import ConversationalCopilotEngine
 from ..services.data_engine import DataEngine, DataSessionStore, sanitize_value
 from ..services.export_engine import ExportEngine
 
+# 1. Primary router with prefix /api/data
 router = APIRouter(prefix="/api/data", tags=["Data Intelligence & Analytics"])
+
+# 2. Direct router with prefix /api for direct /api/upload, /api/clean, etc.
+api_router = APIRouter(prefix="/api", tags=["Insightia Direct Core Endpoints"])
 
 
 class CleanRequest(BaseModel):
@@ -145,15 +150,11 @@ def generate_sample_dataset(sample_id: str) -> pd.DataFrame:
         return df
 
 
-@router.post("/upload")
-async def upload_dataset(
-    file: UploadFile = File(...),
-    preview_rows: int = Query(50, ge=5, le=200)
-):
-    """
-    Ingest multi-format dataset (.csv, .xlsx, .xls, .json).
-    Performs automated EDA, health scoring, outlier detection, and registers session.
-    """
+# -------------------------------------------------------------
+# Core Handler Functions (shared across /api/data/* and /api/*)
+# -------------------------------------------------------------
+
+async def handle_upload(file: UploadFile, preview_rows: int = 50):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file filename provided.")
 
@@ -169,6 +170,7 @@ async def upload_dataset(
         DataSessionStore.set(session_id, {
             "session_id": session_id,
             "filename": file.filename,
+            "file_size": len(content),
             "df": df,
             "audit_log": [{
                 "timestamp": pd.Timestamp.now().isoformat(),
@@ -180,6 +182,7 @@ async def upload_dataset(
 
         profile = DataEngine.profile_dataframe(df, dataset_name=file.filename)
         profile["session_id"] = session_id
+        profile["file_size_bytes"] = len(content)
 
         return JSONResponse(status_code=200, content=profile)
 
@@ -189,14 +192,7 @@ async def upload_dataset(
         raise HTTPException(status_code=500, detail=f"Failed to process dataset: {str(e)}")
 
 
-@router.get("/sample/{sample_id}")
-async def load_sample_dataset(sample_id: str):
-    """
-    Instant 1-click loading of curated enterprise datasets:
-    - 'ecommerce_sales'
-    - 'customer_churn'
-    - 'financial_kpi'
-    """
+async def handle_load_sample(sample_id: str):
     valid_samples = ["ecommerce_sales", "customer_churn", "financial_kpi"]
     if sample_id not in valid_samples:
         sample_id = "ecommerce_sales"
@@ -230,17 +226,7 @@ async def load_sample_dataset(sample_id: str):
     return JSONResponse(status_code=200, content=profile)
 
 
-@router.post("/clean")
-async def clean_dataset(request: CleanRequest):
-    """
-    Execute smart cleaning operations:
-    - 'impute' (Mean, Median, Mode, Constant)
-    - 'drop_na'
-    - 'remove_duplicates'
-    - 'remove_outliers' (IQR / Z-score)
-    - 'coerce_types'
-    - 'auto_clean'
-    """
+async def handle_clean(request: CleanRequest):
     df = DataSessionStore.get_df(request.session_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Dataset session not found or expired. Please upload data.")
@@ -256,7 +242,6 @@ async def clean_dataset(request: CleanRequest):
 
         DataSessionStore.update_df(request.session_id, cleaned_df, audit_entry)
 
-        # Generate updated profile
         session = DataSessionStore.get(request.session_id) or {}
         dataset_name = session.get("filename", "Dataset")
         new_profile = DataEngine.profile_dataframe(cleaned_df, dataset_name=dataset_name)
@@ -273,12 +258,7 @@ async def clean_dataset(request: CleanRequest):
         raise HTTPException(status_code=500, detail=f"Cleaning pipeline error: {str(e)}")
 
 
-@router.post("/chat")
-async def chat_copilot(request: ChatRequest):
-    """
-    Multilingual & Hinglish Natural Language Copilot query endpoint.
-    Executes deterministic sandboxed code and returns verified figures + chart.
-    """
+async def handle_chat(request: ChatRequest):
     df = DataSessionStore.get_df(request.session_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Active dataset not found. Please upload a dataset first.")
@@ -291,9 +271,7 @@ async def chat_copilot(request: ChatRequest):
     return JSONResponse(status_code=200, content=res)
 
 
-@router.get("/profile/{session_id}")
-async def get_profile(session_id: str):
-    """Retrieve the current profile and health metrics of the active session."""
+async def handle_get_profile(session_id: str):
     df = DataSessionStore.get_df(session_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Session not found.")
@@ -306,15 +284,26 @@ async def get_profile(session_id: str):
     return JSONResponse(status_code=200, content=profile)
 
 
-@router.get("/export/{export_format}")
-async def export_data(export_format: str, session_id: str = Query(...)):
-    """
-    Multi-format export endpoint:
-    - 'csv': Cleaned CSV file
-    - 'xlsx': Formatted Excel workbook with style & summary sheet
-    - 'json': Clean schema JSON
-    - 'pdf': Executive PDF summary report
-    """
+async def handle_get_charts(
+    session_id: str,
+    chart_type: Optional[str] = None,
+    column: Optional[str] = None,
+    target_column: Optional[str] = None
+):
+    df = DataSessionStore.get_df(session_id)
+    if df is None:
+        raise HTTPException(status_code=404, detail="Session dataset not found.")
+
+    charts = DataEngine.generate_charts_payload(
+        df=df,
+        chart_type=chart_type,
+        column=column,
+        target_column=target_column
+    )
+    return JSONResponse(status_code=200, content=charts)
+
+
+async def handle_export(export_format: str, session_id: str):
     df = DataSessionStore.get_df(session_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Session dataset not found.")
@@ -355,3 +344,94 @@ async def export_data(export_format: str, session_id: str = Query(...)):
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported format: {export_format}. Use csv, xlsx, json, or pdf.")
 
+
+# -------------------------------------------------------------
+# 1. Mount on /api/data/*
+# -------------------------------------------------------------
+
+@router.post("/upload")
+async def router_upload(file: UploadFile = File(...), preview_rows: int = Query(50, ge=5, le=200)):
+    return await handle_upload(file, preview_rows)
+
+@router.get("/sample/{sample_id}")
+async def router_sample(sample_id: str):
+    return await handle_load_sample(sample_id)
+
+@router.post("/clean")
+async def router_clean(request: CleanRequest):
+    return await handle_clean(request)
+
+@router.post("/chat")
+async def router_chat(request: ChatRequest):
+    return await handle_chat(request)
+
+@router.get("/profile/{session_id}")
+async def router_profile_path(session_id: str):
+    return await handle_get_profile(session_id)
+
+@router.get("/profile")
+async def router_profile_query(session_id: str = Query(...)):
+    return await handle_get_profile(session_id)
+
+@router.get("/charts")
+async def router_charts(
+    session_id: str = Query(...),
+    chart_type: Optional[str] = Query(None),
+    column: Optional[str] = Query(None),
+    target_column: Optional[str] = Query(None)
+):
+    return await handle_get_charts(session_id, chart_type, column, target_column)
+
+@router.get("/export/{export_format}")
+async def router_export_path(export_format: str, session_id: str = Query(...)):
+    return await handle_export(export_format, session_id)
+
+@router.get("/export")
+async def router_export_query(export_format: str = Query("csv"), session_id: str = Query(...)):
+    return await handle_export(export_format, session_id)
+
+
+# -------------------------------------------------------------
+# 2. Mount on /api/* (Direct Endpoints)
+# -------------------------------------------------------------
+
+@api_router.post("/upload")
+async def api_upload(file: UploadFile = File(...), preview_rows: int = Query(50, ge=5, le=200)):
+    return await handle_upload(file, preview_rows)
+
+@api_router.get("/sample/{sample_id}")
+async def api_sample(sample_id: str):
+    return await handle_load_sample(sample_id)
+
+@api_router.post("/clean")
+async def api_clean(request: CleanRequest):
+    return await handle_clean(request)
+
+@api_router.post("/chat")
+async def api_chat(request: ChatRequest):
+    return await handle_chat(request)
+
+@api_router.get("/profile/{session_id}")
+async def api_profile_path(session_id: str):
+    return await handle_get_profile(session_id)
+
+@api_router.get("/profile")
+async def api_profile_query(session_id: str = Query(...)):
+    return await handle_get_profile(session_id)
+
+@api_router.get("/charts")
+async def api_charts(
+    session_id: str = Query(...),
+    chart_type: Optional[str] = Query(None),
+    column: Optional[str] = Query(None),
+    target_column: Optional[str] = Query(None)
+):
+    return await handle_get_charts(session_id, chart_type, column, target_column)
+
+@api_router.get("/export/{export_format}")
+async def api_export_path(export_format: str, session_id: str = Query(...)):
+    return await handle_export(export_format, session_id)
+
+@api_router.get("/export")
+async def api_export_query(export_format: str = Query("csv"), session_id: str = Query(...)):
+    return await handle_export(export_format, session_id)

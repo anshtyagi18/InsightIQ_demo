@@ -73,7 +73,20 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
               <Home className="w-5 h-5" />
             </button>
 
-            {/* 2. Visitors */}
+            {/* 2. Insightia 3-Rail Studio */}
+            <button
+              onClick={() => onSelectView('workspace')}
+              className={`p-2.5 rounded-xl transition-all ${
+                activeView === 'workspace'
+                  ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-[#18181b]'
+              }`}
+              title="Insightia Studio (3-Rail Workspace)"
+            >
+              <Layout className="w-5 h-5 text-indigo-400" />
+            </button>
+
+            {/* 3. Visitors */}
             <button
               onClick={() => onSelectView('visitors')}
               className={`p-2.5 rounded-xl transition-all ${
@@ -159,7 +172,7 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
               onClick={onOpenCopilot}
               className="w-full bg-[#141418] hover:bg-[#18181d] border border-[#27272a] text-xs rounded-lg pl-3 pr-8 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
             />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 bg-[#1b1b22] border border-[#27272a] px-1 py-0.2 rounded shadow-2xs">
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-300 bg-[#1b1b22] border border-[#27272a] px-1.5 py-0.5 rounded shadow-2xs font-semibold">
               ⌘ K
             </span>
           </div>
@@ -175,6 +188,23 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
               }`}
             >
               <span>Overview</span>
+            </button>
+
+            <button
+              onClick={() => onSelectView('workspace')}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                activeView === 'workspace'
+                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
+                  : 'text-zinc-300 hover:bg-[#141418] hover:text-zinc-100'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Layout className="w-3.5 h-3.5 text-indigo-400" />
+                Insightia Studio
+              </span>
+              <span className="text-xs font-mono bg-indigo-950 text-indigo-300 border border-indigo-800/40 px-1.5 py-0.2 rounded font-semibold">
+                3-Rail
+              </span>
             </button>
 
             <button
@@ -197,7 +227,7 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
               }`}
             >
               <span>Survey</span>
-              <span className="text-[10px] font-medium bg-[#1a1a20] text-zinc-400 border border-[#27272a] px-1.5 py-0.2 rounded">
+              <span className="text-xs font-medium bg-[#1a1a20] text-zinc-300 border border-[#27272a] px-1.5 py-0.2 rounded">
                 Beta
               </span>
             </button>
@@ -324,15 +354,15 @@ export const PrelineDoubleSidebar: React.FC<PrelineDoubleSidebarProps> = ({
 
           {/* Small thumbnail preview banner underneath */}
           <div 
-            onClick={() => onSelectView('overview')}
-            className="mt-2.5 bg-[#141418] border border-[#27272a] rounded-lg p-2 flex items-center gap-2 cursor-pointer hover:border-zinc-600 transition-all"
+            onClick={() => onSelectView('workspace')}
+            className="mt-2.5 bg-[#141418] border border-[#27272a] rounded-lg p-2.5 flex items-center gap-2.5 cursor-pointer hover:border-zinc-500 transition-all"
           >
-            <div className="w-7 h-5 rounded bg-[#1b1b22] border border-blue-500/30 overflow-hidden flex items-center justify-center">
-              <span className="text-[8px] font-mono text-blue-400 font-bold">AI</span>
+            <div className="w-8 h-6 rounded bg-[#1b1b22] border border-blue-500/40 overflow-hidden flex items-center justify-center shrink-0">
+              <span className="text-xs font-mono text-blue-400 font-bold">AI</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-semibold text-zinc-200 truncate">Insightia Engine</p>
-              <p className="text-[9px] text-zinc-400">FastAPI &amp; Pandas</p>
+              <p className="text-xs font-bold text-zinc-100 truncate">Insightia Studio</p>
+              <p className="text-xs text-zinc-400 font-medium">FastAPI &amp; Pandas</p>
             </div>
           </div>
         </div>

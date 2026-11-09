@@ -314,7 +314,8 @@ if COMPARISON_AVAILABLE:
     app.include_router(comparison.router, prefix="/api/v1")  # Intelligent comparison router for estimated vs actual analysis
 app.include_router(websocket.router)  # WebSocket router for real-time updates (has its own /api/v1/ws prefix)
 app.include_router(ui_state.router, prefix="/api/v1")  # UI state management for frontend
-app.include_router(data_router.router)  # Insightia Enterprise Data Engine, Profiling, Cleaning, Copilot, & Exports
+app.include_router(data_router.router)  # Insightia /api/data/* (Ingestion, Clean, Chat, Profile, Export)
+app.include_router(data_router.api_router)  # Insightia /api/* direct endpoints (Upload, Clean, Profile, Charts, Export)
 
 # NEW: Include performance monitoring router if available
 if PERFORMANCE_MONITORING_AVAILABLE:

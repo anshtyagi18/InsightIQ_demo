@@ -152,10 +152,10 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
 
       {/* Table Container */}
       <div className="overflow-x-auto flex-1">
-        <table className="min-w-full divide-y divide-[#27272a] text-left text-xs">
-          <thead className="bg-[#141418] text-zinc-400 font-semibold select-none">
+        <table className="min-w-full divide-y divide-[#27272a] text-left text-sm leading-relaxed">
+          <thead className="bg-[#141418] text-zinc-300 font-semibold select-none">
             <tr>
-              <th className="py-3 px-4 w-12 text-center text-zinc-500 font-mono">#</th>
+              <th className="py-3 px-4 w-12 text-center text-zinc-400 font-mono text-xs">#</th>
               {columns.map((col) => {
                 const isSorted = sortColumn === col.name;
                 return (
@@ -165,8 +165,8 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
                     className="py-3 px-4 cursor-pointer hover:bg-[#1b1b22] transition-colors whitespace-nowrap"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-zinc-200">{col.name}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#22222a] text-zinc-400 border border-[#27272a]">
+                      <span className="font-semibold text-zinc-100">{col.name}</span>
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#22222a] text-zinc-300 border border-[#27272a] font-medium">
                         {col.type.slice(0, 3).toUpperCase()}
                       </span>
                       {isSorted ? (
@@ -176,7 +176,7 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
                           <ChevronDown className="w-3.5 h-3.5 text-blue-400 ml-auto" />
                         )
                       ) : (
-                        <ChevronsUpDown className="w-3 h-3 text-zinc-600 opacity-60 ml-auto hover:opacity-100" />
+                        <ChevronsUpDown className="w-3 h-3 text-zinc-500 opacity-60 ml-auto hover:opacity-100" />
                       )}
                     </div>
                   </th>
@@ -187,7 +187,7 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
           <tbody className="divide-y divide-[#27272a]/60 bg-[#0e0e11]">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="py-12 text-center text-zinc-500">
+                <td colSpan={columns.length + 1} className="py-12 text-center text-zinc-400 text-sm">
                   No matching records found.
                 </td>
               </tr>
@@ -196,7 +196,7 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
                 const rowNum = (currentPage - 1) * pageSize + idx + 1;
                 return (
                   <tr key={idx} className="hover:bg-[#141418] transition-colors">
-                    <td className="py-3 px-4 text-center text-zinc-500 font-mono text-[11px]">
+                    <td className="py-3 px-4 text-center text-zinc-400 font-mono text-xs">
                       {rowNum}
                     </td>
                     {columns.map((col) => {
@@ -204,10 +204,10 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
                       const isNull = val === null || val === undefined || val === '';
 
                       return (
-                        <td key={col.name} className="py-3 px-4 whitespace-nowrap text-zinc-300">
+                        <td key={col.name} className="py-3 px-4 whitespace-nowrap text-zinc-100 text-sm">
                           {isNull ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-amber-400 font-sans italic bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                              <AlertCircle className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-1.5 text-xs text-amber-300 font-sans italic bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
+                              <AlertCircle className="w-3 h-3" />
                               null
                             </span>
                           ) : typeof val === 'number' ? (
@@ -215,7 +215,7 @@ export const PrelineDataGrid: React.FC<PrelineDataGridProps> = ({
                               {val.toLocaleString()}
                             </span>
                           ) : (
-                            <span>{String(val)}</span>
+                            <span className="text-zinc-200">{String(val)}</span>
                           )}
                         </td>
                       );

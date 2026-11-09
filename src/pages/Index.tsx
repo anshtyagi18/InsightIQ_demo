@@ -10,6 +10,7 @@ const Dashboard = React.lazy(() => import("./dashboard"));
 const Profile = React.lazy(() => import("./profile"));
 const Datasets = React.lazy(() => import("./datasets"));
 const Analytics = React.lazy(() => import("./analytics").then(m => ({ default: m.Analytics })));
+const InsightiaStudio = React.lazy(() => import("@/components/insightia/InsightiaWorkspace").then(m => ({ default: m.InsightiaWorkspace })));
 
 export default function Index() {
   const location = useLocation();
@@ -87,6 +88,16 @@ export default function Index() {
       <div className="h-screen w-screen overflow-hidden bg-[#09090b]">
         <Suspense fallback={<ComponentLoadingFallback text="Loading Analytics Dashboard..." height="100vh" />}>
           <Dashboard />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (getPageId() === "datasets" || location.pathname === "/workspace" || location.pathname === "/studio") {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-[#09090b]">
+        <Suspense fallback={<ComponentLoadingFallback text="Loading Insightia Studio..." height="100vh" />}>
+          <InsightiaStudio />
         </Suspense>
       </div>
     );

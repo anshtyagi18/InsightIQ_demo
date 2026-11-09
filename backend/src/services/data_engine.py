@@ -446,7 +446,7 @@ class DataEngine:
 
             audit_msg = f"Imputed {imputed_count} missing values using {strategy} strategy across {len(columns)} columns."
 
-        elif action == "drop_na":
+        elif action in ["drop_na", "dropna"]:
             columns = params.get("columns")
             if columns:
                 valid_cols = [c for c in columns if c in cleaned_df.columns]
@@ -457,15 +457,18 @@ class DataEngine:
             rows_dropped = before_rows - len(cleaned_df)
             audit_msg = f"Dropped {rows_dropped} rows containing null values."
 
-        elif action == "remove_duplicates":
+        elif action in ["remove_duplicates", "drop_duplicates"]:
             cleaned_df = cleaned_df.drop_duplicates()
             dups_removed = before_rows - len(cleaned_df)
             audit_msg = f"Removed {dups_removed} duplicate rows."
 
-        elif action == "remove_outliers":
+        elif action in ["remove_outliers", "filter_outliers"]:
             method = params.get("method", "iqr")
+            threshold = float(params.get("threshold", params.get("multiplier", 1.5)))
+            clip = bool(params.get("clip", False))
             columns = params.get("columns", [c for c in cleaned_df.columns if pd.api.types.is_numeric_dtype(cleaned_df[c])])
             mask = pd.Series(True, index=cleaned_df.index)
+            clipped_cols = 0
 
             for col in columns:
                 if col not in cleaned_df.columns or not pd.api.types.is_numeric_dtype(cleaned_df[col]):
@@ -478,22 +481,36 @@ class DataEngine:
                     q1 = series.quantile(0.25)
                     q3 = series.quantile(0.75)
                     iqr = q3 - q1
-                    lower = q1 - 1.5 * iqr
-                    upper = q3 + 1.5 * iqr
-                    col_mask = (cleaned_df[col] >= lower) & (cleaned_df[col] <= upper)
-                    mask = mask & col_mask
+                    lower = q1 - threshold * iqr
+                    upper = q3 + threshold * iqr
+                    if clip:
+                        cleaned_df[col] = cleaned_df[col].clip(lower=lower, upper=upper)
+                        clipped_cols += 1
+                    else:
+                        col_mask = (cleaned_df[col] >= lower) & (cleaned_df[col] <= upper)
+                        mask = mask & col_mask
                 elif method == "zscore":
                     mean_val = series.mean()
                     std_val = series.std()
                     if std_val > 0:
-                        col_mask = ((cleaned_df[col] - mean_val) / std_val).abs() <= 3
-                        mask = mask & col_mask
+                        z_thresh = threshold if threshold > 1.0 else 3.0
+                        if clip:
+                            lower = mean_val - z_thresh * std_val
+                            upper = mean_val + z_thresh * std_val
+                            cleaned_df[col] = cleaned_df[col].clip(lower=lower, upper=upper)
+                            clipped_cols += 1
+                        else:
+                            col_mask = ((cleaned_df[col] - mean_val) / std_val).abs() <= z_thresh
+                            mask = mask & col_mask
 
-            cleaned_df = cleaned_df[mask]
-            outliers_removed = before_rows - len(cleaned_df)
-            audit_msg = f"Filtered out {outliers_removed} outliers using {method.upper()} threshold across {len(columns)} numeric columns."
+            if clip:
+                audit_msg = f"Clipped outliers across {clipped_cols} numeric columns using {method.upper()} threshold ({threshold})."
+            else:
+                cleaned_df = cleaned_df[mask]
+                outliers_removed = before_rows - len(cleaned_df)
+                audit_msg = f"Filtered out {outliers_removed} outliers using {method.upper()} threshold ({threshold}) across {len(columns)} numeric columns."
 
-        elif action == "coerce_types":
+        elif action in ["coerce_types", "type_casting"]:
             type_conversions = 0
             for col in cleaned_df.columns:
                 series = cleaned_df[col].dropna()
@@ -502,7 +519,6 @@ class DataEngine:
                 # Try date coercion
                 if not pd.api.types.is_datetime64_any_dtype(series) and series.dtype == 'object':
                     try:
-                        # Check sample
                         converted = pd.to_datetime(cleaned_df[col], errors='coerce')
                         if converted.notna().sum() / len(series) > 0.8:
                             cleaned_df[col] = converted
@@ -511,10 +527,10 @@ class DataEngine:
                     except Exception:
                         pass
 
-                # Try numeric coercion for object columns that might have currency or commas
+                # Try numeric coercion for object columns that might have currency ($ € £ ₹), percent (%) or commas
                 if series.dtype == 'object':
                     try:
-                        cleaned_str = cleaned_df[col].astype(str).str.replace(r'[\$,]', '', regex=True)
+                        cleaned_str = cleaned_df[col].astype(str).str.replace(r'[\$,€£₹% ]', '', regex=True)
                         converted_num = pd.to_numeric(cleaned_str, errors='coerce')
                         if converted_num.notna().sum() / len(series) > 0.85:
                             cleaned_df[col] = converted_num
@@ -522,7 +538,7 @@ class DataEngine:
                     except Exception:
                         pass
 
-            audit_msg = f"Coerced data types for {type_conversions} columns (normalized dates and numeric formats)."
+            audit_msg = f"Coerced data types for {type_conversions} columns (normalized dates, currency, percentages, and numbers)."
 
         elif action == "auto_clean":
             # 1. Deduplicate
@@ -578,4 +594,99 @@ class DataEngine:
             raise ValueError(f"Unknown cleaning action: {action}")
 
         return cleaned_df, audit_msg
+
+    @classmethod
+    def generate_charts_payload(
+        cls,
+        df: pd.DataFrame,
+        chart_type: Optional[str] = None,
+        column: Optional[str] = None,
+        target_column: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate structured chart distribution payloads for frontend rendering:
+        - histograms: for numeric columns
+        - categorical: bar charts for categories
+        - trends: date-indexed aggregations
+        - correlations: scatter coordinates
+        """
+        num_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+        cat_cols = [c for c in df.columns if not pd.api.types.is_numeric_dtype(df[c]) and not pd.api.types.is_datetime64_any_dtype(df[c])]
+        date_cols = [c for c in df.columns if pd.api.types.is_datetime64_any_dtype(df[c]) or 'date' in str(c).lower()]
+
+        charts: Dict[str, Any] = {
+            "histograms": {},
+            "categorical": {},
+            "trends": [],
+            "correlations": []
+        }
+
+        # 1. Histograms for numeric columns
+        target_nums = [column] if column and column in num_cols else num_cols[:6]
+        for c in target_nums:
+            series = df[c].dropna()
+            if len(series) >= 5:
+                counts, bin_edges = np.histogram(series, bins=8)
+                bin_data = []
+                for i in range(len(counts)):
+                    label = f"{round(float(bin_edges[i]), 1)}-{round(float(bin_edges[i+1]), 1)}"
+                    bin_data.append({"name": label, "count": int(counts[i])})
+                charts["histograms"][c] = {
+                    "chartType": "bar",
+                    "title": f"Distribution of {c}",
+                    "xAxis": "name",
+                    "yAxis": "count",
+                    "data": bin_data,
+                    "mean": round(float(series.mean()), 2),
+                    "median": round(float(series.median()), 2)
+                }
+
+        # 2. Categorical distribution for category columns
+        target_cats = [column] if column and column in cat_cols else cat_cols[:4]
+        for c in target_cats:
+            counts = df[c].value_counts(dropna=True).head(8)
+            cat_data = [{"name": str(val)[:24], "count": int(cnt), "percentage": round((cnt / len(df)) * 100, 1)} for val, cnt in counts.items()]
+            charts["categorical"][c] = {
+                "chartType": "bar",
+                "title": f"{c} Breakdown",
+                "xAxis": "name",
+                "yAxis": "count",
+                "data": cat_data
+            }
+
+        # 3. Trends over time
+        if date_cols and num_cols:
+            d_col = date_cols[0]
+            m_col = target_column if target_column and target_column in num_cols else num_cols[0]
+            try:
+                trend_df = df[[d_col, m_col]].dropna().copy()
+                trend_df['sort_date'] = pd.to_datetime(trend_df[d_col], errors='coerce')
+                trend_df = trend_df.dropna(subset=['sort_date']).sort_values('sort_date')
+                grouped = trend_df.groupby(trend_df['sort_date'].dt.strftime('%Y-%m-%d'))[m_col].mean().head(30)
+                charts["trends"].append({
+                    "chartType": "line",
+                    "title": f"Trend of {m_col} over {d_col}",
+                    "xAxis": "date",
+                    "yAxis": "value",
+                    "data": [{"date": str(d), "value": round(float(v), 2)} for d, v in grouped.items()]
+                })
+            except Exception:
+                pass
+
+        # 4. Correlation Scatter Coordinates
+        if len(num_cols) >= 2:
+            c1 = num_cols[0]
+            c2 = target_column if target_column and target_column in num_cols and target_column != c1 else num_cols[1]
+            scatter_df = df[[c1, c2]].dropna().head(100)
+            charts["correlations"].append({
+                "chartType": "scatter",
+                "title": f"{c1} vs {c2}",
+                "xAxis": "x",
+                "yAxis": "y",
+                "xLabel": c1,
+                "yLabel": c2,
+                "data": [{"x": round(float(row[c1]), 2), "y": round(float(row[c2]), 2)} for _, row in scatter_df.iterrows()]
+            })
+
+        return sanitize_value(charts)
 

@@ -245,7 +245,7 @@ export const PrelineVisitorsView: React.FC<PrelineVisitorsViewProps> = ({
                   <td className="py-2.5 px-4 font-mono text-zinc-400">{s.pages} views</td>
                   <td className="py-2.5 px-4 text-right">
                     <span
-                      className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                         s.status === 'Active'
                           ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                           : s.status === 'Completed'

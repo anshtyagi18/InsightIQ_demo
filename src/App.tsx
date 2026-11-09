@@ -73,6 +73,16 @@ const AppContent = () => {
               <Index />
             </Suspense>
           } />
+          <Route path="/workspace" element={
+            <Suspense fallback={<PageLoadingFallback text="Loading Insightia Studio..." />}>
+              <Index />
+            </Suspense>
+          } />
+          <Route path="/studio" element={
+            <Suspense fallback={<PageLoadingFallback text="Loading Insightia Studio..." />}>
+              <Index />
+            </Suspense>
+          } />
           <Route path="/analytics" element={
             <Suspense fallback={<PageLoadingFallback text="Loading analytics..." />}>
               <Index />

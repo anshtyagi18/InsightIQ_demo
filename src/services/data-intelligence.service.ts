@@ -92,6 +92,15 @@ export interface ChartPayload {
 
 export interface CopilotResponse {
   session_id: string;
+  reply?: string;
+  action_taken?: 'clean' | 'filter' | 'calculate' | 'none';
+  chart_config?: {
+    type: 'bar' | 'line' | 'scatter' | 'pie';
+    title: string;
+    x_axis: string;
+    y_axis: string;
+    data: Record<string, any>[];
+  } | null;
   explanation: string;
   verified_figures: Record<string, any>;
   chart_payload: ChartPayload | null;
@@ -156,6 +165,22 @@ export const dataIntelligenceService = {
       query,
     }, {
       timeout: 60000,
+    });
+    return response.data;
+  },
+
+  /**
+   * Retrieve formatted distribution chart payloads
+   */
+  async getCharts(sessionId: string, chartType?: string, column?: string, targetColumn?: string): Promise<Record<string, any>> {
+    const params: Record<string, string> = { session_id: sessionId };
+    if (chartType) params.chart_type = chartType;
+    if (column) params.column = column;
+    if (targetColumn) params.target_column = targetColumn;
+
+    const response = await axios.get<Record<string, any>>(`${API_BASE}/charts`, {
+      params,
+      timeout: 30000,
     });
     return response.data;
   },

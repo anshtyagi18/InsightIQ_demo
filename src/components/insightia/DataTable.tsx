@@ -151,39 +151,39 @@ export const DataTable: React.FC<DataTableProps> = ({ data, columns, totalRows }
 
       {/* Grid Container */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full text-left text-sm leading-relaxed border-collapse">
           <thead className="sticky top-0 z-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800 text-zinc-300 font-medium">
             <tr>
-              <th className="py-2.5 px-3 w-12 text-center text-zinc-500 font-mono">#</th>
+              <th className="py-3 px-4 w-12 text-center text-zinc-400 font-mono text-xs">#</th>
               {activeCols.map((col) => {
                 const isSorted = sortColumn === col.name;
                 return (
                   <th
                     key={col.name}
                     onClick={() => handleSort(col.name)}
-                    className="py-2.5 px-3 cursor-pointer hover:bg-zinc-800/50 transition-colors select-none whitespace-nowrap"
+                    className="py-3 px-4 cursor-pointer hover:bg-zinc-800/50 transition-colors select-none whitespace-nowrap"
                   >
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-zinc-200">{col.name}</span>
-                      <span className={`text-[10px] px-1 py-0.2 rounded font-mono font-normal ${
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-zinc-100">{col.name}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded font-mono font-medium ${
                         col.type === 'numeric' ? 'bg-indigo-950/80 text-indigo-300 border border-indigo-800/40' :
                         col.type === 'datetime' ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-800/40' :
                         col.type === 'categorical' ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/40' :
-                        'bg-zinc-800 text-zinc-400'
+                        'bg-zinc-800 text-zinc-300'
                       }`}>
                         {col.type.slice(0, 3).toUpperCase()}
                       </span>
                       {col.missing_count > 0 && (
                         <span 
                           title={`${col.missing_count} missing values (${col.missing_pct}%)`}
-                          className="w-1.5 h-1.5 rounded-full bg-amber-500"
+                          className="w-2 h-2 rounded-full bg-amber-500"
                         />
                       )}
-                      <span className="ml-auto text-zinc-500">
+                      <span className="ml-auto text-zinc-400">
                         {isSorted ? (
-                          sortDirection === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-indigo-400" /> : <ChevronDown className="w-3.5 h-3.5 text-indigo-400" />
+                          sortDirection === 'asc' ? <ChevronUp className="w-4 h-4 text-indigo-400" /> : <ChevronDown className="w-4 h-4 text-indigo-400" />
                         ) : (
-                          <ChevronsUpDown className="w-3 h-3 opacity-30 hover:opacity-100" />
+                          <ChevronsUpDown className="w-3.5 h-3.5 opacity-40 hover:opacity-100" />
                         )}
                       </span>
                     </div>
@@ -195,7 +195,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, columns, totalRows }
           <tbody className="divide-y divide-zinc-800/60 font-mono">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={activeCols.length + 1} className="py-12 text-center text-zinc-500">
+                <td colSpan={activeCols.length + 1} className="py-12 text-center text-zinc-400 text-sm">
                   No records match your query filter.
                 </td>
               </tr>
@@ -207,7 +207,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, columns, totalRows }
                     key={rowIdx}
                     className="hover:bg-zinc-800/40 transition-colors group"
                   >
-                    <td className="py-2 px-3 text-center text-zinc-500 text-[11px] select-none">
+                    <td className="py-3 px-4 text-center text-zinc-400 text-xs select-none">
                       {actualIndex}
                     </td>
                     {activeCols.map((col) => {
@@ -226,27 +226,27 @@ export const DataTable: React.FC<DataTableProps> = ({ data, columns, totalRows }
                       return (
                         <td 
                           key={col.name}
-                          className={`py-2 px-3 whitespace-nowrap text-zinc-200 text-xs ${
+                          className={`py-3 px-4 whitespace-nowrap text-zinc-100 text-sm leading-relaxed ${
                             isNull ? 'bg-amber-950/20' : isOutlier ? 'bg-rose-950/15' : ''
                           }`}
                         >
                           {isNull ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-amber-400/90 font-sans italic bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800/30">
-                              <AlertCircle className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-1.5 text-xs text-amber-300 font-sans italic bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40">
+                              <AlertCircle className="w-3 h-3" />
                               null
                             </span>
                           ) : isOutlier ? (
                             <span 
                               title={`Outlier beyond IQR boundary [${col.stats?.lower_bound} - ${col.stats?.upper_bound}]`}
-                              className="text-rose-400 font-semibold inline-flex items-center gap-1"
+                              className="text-rose-400 font-semibold inline-flex items-center gap-1.5"
                             >
                               {String(val)}
-                              <span className="w-1 h-1 rounded-full bg-rose-500" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                             </span>
                           ) : typeof val === 'number' ? (
-                            <span className="text-zinc-100">{val.toLocaleString()}</span>
+                            <span className="text-zinc-100 font-medium">{val.toLocaleString()}</span>
                           ) : (
-                            <span className="text-zinc-300 font-sans">{String(val)}</span>
+                            <span className="text-zinc-200 font-sans">{String(val)}</span>
                           )}
                         </td>
                       );
