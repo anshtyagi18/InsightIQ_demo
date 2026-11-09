@@ -102,11 +102,15 @@ export const InsightiaWorkspace: React.FC = () => {
   const handleDatasetMutated = useCallback(async () => {
     if (!profile) return;
     try {
-      // Re-fetch sample or clean request to update preview
-      const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'coerce_types');
+      const updated = await dataIntelligenceService.getProfile(profile.session_id);
       setProfile(updated);
     } catch (e) {
-      console.warn('Profile refresh notice:', e);
+      try {
+        const updated = await dataIntelligenceService.cleanDataset(profile.session_id, 'coerce_types');
+        setProfile(updated);
+      } catch (err) {
+        console.warn('Profile refresh notice:', err);
+      }
     }
   }, [profile]);
 

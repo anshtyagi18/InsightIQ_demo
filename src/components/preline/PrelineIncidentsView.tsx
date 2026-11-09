@@ -43,9 +43,9 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
   }
 
   // Find columns with missing values or outliers
-  const columnsWithMissing = profile.columns.filter((c) => c.null_count > 0);
+  const columnsWithMissing = profile.columns.filter((c) => (c.missing_count ?? (c as any).null_count ?? 0) > 0);
   const columnsWithOutliers = profile.columns.filter(
-    (c) => (c.iqr_outliers && c.iqr_outliers > 0) || (c.zscore_outliers && c.zscore_outliers > 0)
+    (c) => (c.outliers_count && c.outliers_count > 0) || (c.iqr_outliers && c.iqr_outliers > 0) || (c.zscore_outliers && c.zscore_outliers > 0)
   );
 
   const handleFixAction = async (action: 'impute' | 'drop_na' | 'remove_outliers' | 'remove_duplicates' | 'auto_clean') => {
@@ -122,8 +122,8 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
             <AlertTriangle className="w-4 h-4 text-amber-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-100">
-              {profile.total_missing.toLocaleString()}
+            <span className="text-2xl font-bold text-zinc-100 font-mono">
+              {(profile.missing_cells ?? (profile as any).total_missing ?? 0).toLocaleString()}
             </span>
             <span className="text-xs text-zinc-400">
               across {columnsWithMissing.length} columns
@@ -138,8 +138,8 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
             <ShieldAlert className="w-4 h-4 text-rose-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-100">
-              {profile.outliers_count.toLocaleString()}
+            <span className="text-2xl font-bold text-zinc-100 font-mono">
+              {(profile.outlier_count ?? (profile as any).outliers_count ?? 0).toLocaleString()}
             </span>
             <span className="text-xs text-zinc-400">IQR 1.5x test</span>
           </div>
@@ -173,8 +173,8 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             onClick={() => handleFixAction('impute')}
-            disabled={isFixing !== null || profile.total_missing === 0}
-            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40"
+            disabled={isFixing !== null || (profile.missing_cells ?? 0) === 0}
+            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40 cursor-pointer"
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold text-zinc-100">Smart Impute</span>
@@ -187,8 +187,8 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
 
           <button
             onClick={() => handleFixAction('drop_na')}
-            disabled={isFixing !== null || profile.total_missing === 0}
-            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40"
+            disabled={isFixing !== null || (profile.missing_cells ?? 0) === 0}
+            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40 cursor-pointer"
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold text-zinc-100">Drop Incomplete</span>
@@ -201,8 +201,8 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
 
           <button
             onClick={() => handleFixAction('remove_outliers')}
-            disabled={isFixing !== null || profile.outliers_count === 0}
-            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40"
+            disabled={isFixing !== null || (profile.outlier_count ?? 0) === 0}
+            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40 cursor-pointer"
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold text-zinc-100">Trim Outliers</span>
@@ -216,7 +216,7 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
           <button
             onClick={() => handleFixAction('remove_duplicates')}
             disabled={isFixing !== null}
-            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40"
+            className="p-3 bg-[#141418] hover:bg-[#1a1a20] border border-[#27272a] rounded-xl text-left transition-all disabled:opacity-40 cursor-pointer"
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold text-zinc-100">Deduplicate</span>
@@ -254,7 +254,11 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
             </thead>
             <tbody className="divide-y divide-[#27272a]/60">
               {profile.columns.map((col) => {
-                const hasIssue = col.null_count > 0 || (col.iqr_outliers && col.iqr_outliers > 0);
+                const nullCount = col.missing_count ?? (col as any).null_count ?? 0;
+                const nullPct = col.missing_pct ?? (col as any).null_percentage ?? 0;
+                const outliers = col.outliers_count ?? (col as any).iqr_outliers ?? 0;
+                const colType = col.type || (col as any).dtype || 'text';
+                const hasIssue = nullCount > 0 || outliers > 0;
                 return (
                   <tr key={col.name} className="hover:bg-[#141418] transition-colors">
                     <td className="py-2.5 px-4 font-mono font-medium text-zinc-100">
@@ -262,21 +266,21 @@ export const PrelineIncidentsView: React.FC<PrelineIncidentsViewProps> = ({
                     </td>
                     <td className="py-2.5 px-4">
                       <span className="font-mono text-[11px] bg-[#1a1a20] text-zinc-300 border border-[#27272a] px-2 py-0.5 rounded">
-                        {col.dtype}
+                        {String(colType).toUpperCase()}
                       </span>
                     </td>
                     <td className="py-2.5 px-4">
-                      {col.null_count > 0 ? (
+                      {nullCount > 0 ? (
                         <span className="text-amber-400 font-semibold">
-                          {col.null_count} ({col.null_percentage}%)
+                          {nullCount} ({nullPct}%)
                         </span>
                       ) : (
                         <span className="text-emerald-400">0</span>
                       )}
                     </td>
                     <td className="py-2.5 px-4 font-mono">
-                      {col.iqr_outliers && col.iqr_outliers > 0 ? (
-                        <span className="text-rose-400 font-semibold">{col.iqr_outliers}</span>
+                      {outliers > 0 ? (
+                        <span className="text-rose-400 font-semibold">{outliers}</span>
                       ) : (
                         <span className="text-zinc-600">0</span>
                       )}
