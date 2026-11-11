@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "SilentlyContinue"
+$ErrorActionPreference = "SilentlyContinue"
 $TunnelDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $TunnelDir
 $CloudflaredExe = Join-Path $TunnelDir "cloudflared.exe"
@@ -46,9 +46,9 @@ for ($i = 0; $i -lt 30; $i++) {
 }
 
 if ($frontendReady) {
-    Write-Host "      [✓] Frontend is active on http://localhost:3000" -ForegroundColor Green
+    Write-Host "      [OK] Frontend is active on http://localhost:3000" -ForegroundColor Green
 } else {
-    Write-Host "      [!] Frontend is taking longer to start, proceeding with tunnel..." -ForegroundColor Yellow
+    Write-Host "      [NOTE] Frontend is still warming up, proceeding with tunnel..." -ForegroundColor Yellow
 }
 
 # Step 2: Start Cloudflare Tunnel
@@ -83,7 +83,7 @@ if (-not $tunnelUrl) {
     Exit 1
 }
 
-Write-Host "      [✓] Tunnel generated: $tunnelUrl" -ForegroundColor Green
+Write-Host "      [OK] Tunnel generated: $tunnelUrl" -ForegroundColor Green
 
 # Step 3: Wait for DNS propagation
 Write-Host "[3/4] Checking global DNS propagation for $domain..." -ForegroundColor Yellow
@@ -100,14 +100,14 @@ for ($d = 0; $d -lt 15; $d++) {
 }
 
 if ($dnsResolved) {
-    Write-Host "      [✓] DNS propagated successfully" -ForegroundColor Green
+    Write-Host "      [OK] DNS propagated successfully" -ForegroundColor Green
 } else {
     # Check if public DNS has it
     $pubDns = Resolve-DnsName -Name $domain -Server 1.1.1.1 -ErrorAction SilentlyContinue
     if ($pubDns) {
-        Write-Host "      [✓] DNS resolved via Cloudflare edge (local ISP cache updating...)" -ForegroundColor Yellow
+        Write-Host "      [OK] DNS resolved via Cloudflare edge (local ISP cache updating...)" -ForegroundColor Yellow
     } else {
-        Write-Host "      [!] DNS still propagating through global root servers..." -ForegroundColor Yellow
+        Write-Host "      [NOTE] DNS still propagating through global root servers..." -ForegroundColor Yellow
     }
 }
 
@@ -126,9 +126,9 @@ for ($h = 0; $h -lt 15; $h++) {
 }
 
 if ($httpReady) {
-    Write-Host "      [✓] Live HTTPS tunnel confirmed operational (HTTP 200 OK)" -ForegroundColor Green
+    Write-Host "      [OK] Live HTTPS tunnel confirmed operational (HTTP 200 OK)" -ForegroundColor Green
 } else {
-    Write-Host "      [i] Tunnel established; edge route warming up..." -ForegroundColor Yellow
+    Write-Host "      [NOTE] Tunnel established; edge route warming up..." -ForegroundColor Yellow
 }
 
 # Display Final Success Banner
@@ -137,10 +137,10 @@ Write-Host "====================================================================
 Write-Host "                SUCCESS: CLOUDFLARE LIVE TUNNEL ESTABLISHED!                   " -ForegroundColor Green
 Write-Host "================================================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "   >> LIVE PUBLIC URL : $tunnelUrl" -ForegroundColor White -BackgroundColor DarkGreen
-Write-Host "   >> LOCAL FRONTEND  : http://localhost:3000" -ForegroundColor Cyan
-Write-Host "   >> LOCAL BACKEND   : http://localhost:8000" -ForegroundColor Cyan
-Write-Host "   >> SECURITY        : End-to-End TLS Encryption via Cloudflare Edge" -ForegroundColor Gray
+Write-Host "   -> LIVE PUBLIC URL : $tunnelUrl" -ForegroundColor White -BackgroundColor DarkGreen
+Write-Host "   -> LOCAL FRONTEND  : http://localhost:3000" -ForegroundColor Cyan
+Write-Host "   -> LOCAL BACKEND   : http://localhost:8000" -ForegroundColor Cyan
+Write-Host "   -> SECURITY        : End-to-End TLS Encryption via Cloudflare Edge" -ForegroundColor Gray
 Write-Host ""
 Write-Host "================================================================================" -ForegroundColor Green
 Write-Host "[*] Launching live link in your default browser..." -ForegroundColor Yellow
