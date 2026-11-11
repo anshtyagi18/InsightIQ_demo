@@ -68,3 +68,7 @@ Thumbs.db
 # Task files
 tasks.json
 tasks/
+
+# Tunnel logs
+tunnel/*.log
+tunnel/tunnel.log

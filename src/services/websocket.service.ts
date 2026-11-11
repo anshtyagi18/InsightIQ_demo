@@ -33,7 +33,11 @@ class WebSocketService {
   private statusHandlers: Map<string, Set<(status: ConnectionStatus) => void>> = new Map();
   private reconnectTimers: Map<string, NodeJS.Timeout> = new Map();
   
-  private readonly baseUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000';
+  private readonly baseUrl = import.meta.env.VITE_WS_BASE_URL || (
+    typeof window !== 'undefined'
+      ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+      : 'ws://localhost:8000'
+  );
 
   /**
    * Connect to a dashboard WebSocket for real-time updates

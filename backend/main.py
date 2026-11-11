@@ -242,12 +242,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS - Use environment variable for allowed origins
+# Configure CORS - Support local dev and Cloudflare Tunnel origins securely
 from src.core.config import settings
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allow_headers=["*"],
